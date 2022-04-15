@@ -71,6 +71,7 @@ ColumnLayout {
     property alias validator: input.validator
     property alias readOnly : input.readOnly
     property alias cursorPosition: input.cursorPosition
+    property bool openLinkButton: false
     property bool copyButton: false
     property bool pasteButton: false
     property alias copyButtonText: copyButtonId.text
@@ -195,7 +196,7 @@ ColumnLayout {
                         appWindow.showStatusMessage(qsTr("Copied to clipboard"), 3);
                     }
                 }
-                visible: copyButton && input.text !== ""
+                visible: copyButton && input.text
             }
 
             MoneroComponents.LabelButton {
@@ -206,6 +207,19 @@ ColumnLayout {
                 }
                 text: qsTr("Paste") + translationManager.emptyString
                 visible: pasteButton
+            }
+
+            MoneroComponents.LabelButton {
+                id: openLinkId
+                fontFamily: FontAwesome.fontFamily
+                text: FontAwesome.externalLinkAlt
+                tooltip: qsTr("Open in browser") + translationManager.emptyString
+                onClicked: {
+                    if (input.text.length > 0) {
+                        Qt.openUrlExternally(input.text);
+                    }
+                }
+                visible: openLinkButton
             }
         }
     }

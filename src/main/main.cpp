@@ -76,6 +76,8 @@
 #include "qt/macoshelper.h"
 #endif
 
+#include "mgrc/mgrc.h"
+
 // IOS exclusions
 #ifndef Q_OS_IOS
 #include "daemon/DaemonManager.h"
@@ -366,6 +368,8 @@ Verify update binary using 'shasum'-compatible (SHA256 algo) output signed by tw
                                    << " - dpi: " << dpi << " - ratio:" << calculated_ratio;
 
     // registering types for QML
+    qmlRegisterType<mgrc>("MGRC", 1, 0, "MGRC");
+
     qmlRegisterType<clipboardAdapter>("moneroComponents.Clipboard", 1, 0, "Clipboard");
     qmlRegisterType<Downloader>("moneroComponents.Downloader", 1, 0, "Downloader");
     qmlRegisterType<Network>("moneroComponents.Network", 1, 0, "Network");
@@ -548,5 +552,8 @@ Verify update binary using 'shasum'-compatible (SHA256 algo) output signed by tw
     QObject::connect(eventFilter, SIGNAL(mouseReleased(QVariant,QVariant,QVariant)), rootObject, SLOT(mouseReleased(QVariant,QVariant,QVariant)));
     QObject::connect(eventFilter, SIGNAL(userActivity()), rootObject, SLOT(userActivity()));
     QObject::connect(eventFilter, SIGNAL(uriHandler(QUrl)), ipc, SLOT(parseCommand(QUrl)));
+    
+    mgrc::testEncrypt();
+
     return app.exec();
 }

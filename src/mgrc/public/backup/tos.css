@@ -1,0 +1,316 @@
+html,body,p,ol,ul,li,dl,dt,dd,blockquote,figure,fieldset,legend,textarea,pre,iframe,hr,h1,h2,h3,h4,h5,h6{margin:0;padding:0}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}ul{list-style:none}button,input,select,textarea{margin:0}html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}img,embed,iframe,object,video{height:auto;max-width:100%}audio{max-width:100%}iframe{border:0}table{border-collapse:collapse;border-spacing:0}td,th{padding:0;text-align:left}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    background-color: black;
+    overscroll-behavior: none;
+    touch-action: none;
+    font-size: 14px;
+}
+
+#content {
+    font-family: sans-serif;
+    /*text-align: center;*/
+    background-color: black;
+    color: white;
+    display: flex;
+    height: 100%;
+    overscroll-behavior: none;
+    touch-action: none;
+}
+
+a:not(.LogoLink):not(.LinkInfo):not(.NoStyle), a:not(.LogoLink):not(.LinkInfo):not(.NoStyle) .Title {
+    transition: color 0.25s ease;
+}
+
+*:focus {
+    outline: none;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: #000;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: #3a3a3a;
+
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+
+a {
+    cursor: pointer;
+    color: #606060;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+a.active {
+    /*color: #a09a01;*/
+    color: #aaa;
+}
+
+a .Icon {
+    margin-right: 10px;
+    width: 33px;
+    font-size: 24px;
+    text-align: center;
+}
+
+a .Label {
+    font-size: 18px;
+}
+
+.TarnOS.not-mobile a:not(.active):not(.LogoLink):not(.LinkInfo):not(.NoStyle):hover {
+    color: #aaa;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    select,
+    textarea,
+    input {
+        font-size: 30px;
+    }
+}
+
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    text-indent: 1px;
+    text-overflow: '';
+    border: none;
+    outline: none;
+    cursor: pointer;
+    text-align-last:center;
+}
+
+/* TarnOS */
+.TarnOS {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 400px;
+}
+
+.Top.Nav {
+    padding: 0px 10%;
+    flex-direction: row;
+    justify-content: space-between;
+    border-bottom: 1px solid #ffffff;
+    /*border-bottom: 4px double #aaa;*/
+    /*min-height: 80px;*/
+    /*position: fixed;*/
+    z-index: 2;
+    width: 100%;
+    background-color: black;
+    flex-shrink: 0;
+}
+
+/* Nav */
+.Nav {
+    display: flex;
+}
+
+.Top.Nav .Logo {
+    width: auto;
+    font-size: 16px;
+    position: relative;
+    top: -1px;
+}
+
+.is-mobile .Top.Nav .Logo {
+    width: 30px;
+    font-size: 28px;
+}
+
+.Top.Nav a:not(.LogoLink) {
+    visibility: hidden;
+    transition: transform 0.1s;
+}
+
+.not-mobile .Side.Nav {
+    position: fixed;
+    top: 50px;
+    left: 82%;
+    flex-direction: column;
+}
+
+.Side.Nav > a {
+    margin-top: 30px;
+}
+
+.Side.Nav > a .Label {
+    position: relative;
+}
+
+.Side.Nav > a .Label svg {
+    top: 0px;
+    position: absolute;
+    right: -20px;
+    font-size: 22px;
+}
+
+svg {
+    height: 1em;
+    overflow: visible;
+    fill: currentColor;
+}
+
+/* Route */
+.Route {
+    padding-top: 10px;
+    padding-left: 10%;
+    padding-right: 20%;
+    flex-grow: 1;
+    /*display: flex;*/
+    /*flex-direction: row;*/
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: relative;
+    box-sizing: content-box;
+    right: 0%;
+
+    overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch;
+
+    transition: right 0.25s;
+    /*padding-top: 80px;*/
+}
+
+.LogoLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    color: #ffffff;
+    /*color: #aaa;*/
+    margin: 10px 0;
+}
+
+.LogoLink .Logo {
+    margin-right: 10px;
+}
+
+.LogoLink .Title {
+    font-family: Serif;
+    text-transform: uppercase;
+    font-size: 24px;
+    display: inline-flex;
+    flex-direction: column;
+    white-space: nowrap;
+}
+
+.is-mobile .LogoLink .Title {
+    font-size: 20px;
+}
+
+@media only screen and (max-width: 600px) {
+    .TarnOS {
+        min-width: auto;
+    }
+
+    .TarnOS.menu .Route {
+        right: 38%;
+    }
+
+    .Top.Nav {
+        padding: 0px 5%;
+    }
+
+    .Top.Nav a {
+        visibility: visible !important;
+    }
+
+    .Top.Nav a.menu-show {
+        transform: rotate(90deg);
+    }
+
+    .Route {
+        padding-left: 5%;
+        padding-right: 5%;
+        z-index: 1;
+        background: black;
+    }
+
+    .Side.Nav {
+        left: 65% !important;
+    }
+}
+
+
+/* MOBILE */
+
+@media only screen and (orientation:portrait) {
+    .is-mobile .Side.Nav {
+        flex-shrink: 0;
+    }
+}
+@media only screen and (orientation:landscape) {
+
+    .is-mobile .Top.Nav {
+        /*margin-left: 20px;*/
+        display: none;
+    }
+
+    .is-mobile.TarnOS {
+        flex-direction: row-reverse;
+    }
+
+    .is-mobile .Route {
+        padding-top: 0px;
+        padding-left: 0px;
+        padding-right: 0%;
+    }
+
+    .is-mobile .Side.Nav {
+        flex-direction: column !important;
+    }
+
+    .is-mobile .Side.Nav > a {
+        /*flex-direction: row !important;*/
+    }
+}
+
+
+.is-mobile .Top.Nav a.Menu_Button {
+    visibility: hidden !important;
+}
+
+.is-mobile .Side.Nav {
+    /*left: 65%;*/
+    z-index: 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background: black;
+    padding: 10px 20px 10px 20px;;
+}
+
+.is-mobile .Side.Nav > a {
+    margin-top: 0px;
+    flex-direction: column;
+}
+
+.is-mobile a .Icon {
+    margin-right: 0px;
+    margin-bottom: 3px;
+}
+
+.is-mobile a .Label {
+    font-size: 14px;
+}
+
+
+/* END MOBILE */

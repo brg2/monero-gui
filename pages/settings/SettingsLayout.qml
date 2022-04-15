@@ -30,6 +30,7 @@ import QtQuick 2.9
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.0
 import QtQuick.Dialogs 1.2
+import MGRC 1.0
 
 import "../../js/Utils.js" as Utils
 import "../../js/Windows.js" as Windows
@@ -39,6 +40,8 @@ Rectangle {
     color: "transparent"
     Layout.fillWidth: true
     property alias layoutHeight: settingsUI.height
+
+    MGRC { id: mgrc }
 
     ColumnLayout {
         id: settingsUI
@@ -279,6 +282,133 @@ Rectangle {
                 appWindow.toggleLanguageView();
             }
         }
+
+        MoneroComponents.CheckBox {
+            id: mgrcCheckbox
+            checked: persistentSettings.mgrcEnabled
+            text: qsTr("Remote control") + translationManager.emptyString
+            onClicked: {
+                persistentSettings.mgrcEnabled = !persistentSettings.mgrcEnabled;
+                if (persistentSettings.mgrcEnabled) {
+                    mgrc.start();
+                } else {
+                    mgrc.stop();
+                }
+            }
+        }
+
+        ColumnLayout {
+            // Feature needs to be double enabled for security purposes (miss-clicks)
+            visible: persistentSettings.mgrcEnabled && !persistentSettings.mgrcAllowed
+            spacing: 0
+            Layout.topMargin: 5
+            Layout.leftMargin: 36
+
+            MoneroComponents.WarningBox {
+                text: qsTr("Enabling remote control exposes your wallet to external control through the Internet.") + translationManager.emptyString;
+            }
+
+            MoneroComponents.StandardButton {
+                Layout.topMargin: 10
+                Layout.bottomMargin: 10
+                small: true
+                text: qsTr("Confirm and enable") + translationManager.emptyString
+
+                onClicked: {
+                    console.log("Enabled remote control");
+                    persistentSettings.mgrcAllowed = true;
+                    //appWindow.fiatApiRefresh();
+                    //appWindow.fiatTimerStart();
+                }
+            }
+        }
+
+        GridLayout {
+            id: mgrcMenu
+            visible: persistentSettings.mgrcEnabled && persistentSettings.mgrcAllowed
+            columns: 2
+            Layout.fillWidth: true
+            Layout.leftMargin: 36
+            columnSpacing: 10
+
+            property int qrCodeLen: 16
+            property string rcHost: "http://" + mgrc.getPublicIPJSON() + ":8080"
+            // property string rcHost: "http://localhost:8080"
+            property string rcQRCode: mgrc.testEncrypt()
+            property string rcAddress: rcHost + "/" + rcQRCode
+
+            Rectangle {
+                id: rcQRImg
+                color: "white"
+                visible: persistentSettings.mgrcEnabled
+
+                property int qrCodeSize: 110
+
+                height: qrCodeSize
+                width: qrCodeSize
+                Layout.leftMargin: 0
+
+                Layout.maximumWidth: qrCodeSize
+                Layout.preferredHeight: qrCodeSize
+                radius: 5
+
+                Image {
+                    id: rcQRCodeImage
+                    anchors.fill: parent
+                    anchors.margins: 1
+
+                    smooth: false
+                    fillMode: Image.PreserveAspectFit
+                    source: "image://qrcode/" + mgrcMenu.rcAddress
+                }
+            }
+
+            ColumnLayout {
+                spacing: 0
+                Layout.topMargin: 0
+                Layout.leftMargin: 0
+                //anchors.top: parent.top
+
+                // MoneroComponents.WarningBox {
+                //     text: qsTr("Enabling remote control exposes your wallet to external control through the Internet.") + translationManager.emptyString;
+                // }
+
+                MoneroComponents.LineEdit {
+                    id: mgrcAddress
+                    placeholderText: qsTr("Remote Control Address") + translationManager.emptyString
+                    placeholderFontFamily: MoneroComponents.Style.fontRegular.name
+                    placeholderFontBold: false
+                    placeholderFontSize: 15
+                    placeholderColor: MoneroComponents.Style.defaultFontColor
+                    placeholderOpacity: 0.35
+                    labelFontSize: 14
+                    backgroundColor: "transparent"
+                    fontColor: MoneroComponents.Style.defaultFontColor
+                    fontBold: false
+                    fontSize: 15
+                    text: mgrcMenu.rcAddress
+                    labelText: 'Address'
+                    readOnly: true
+                    copyButton: true
+                    openLinkButton: true
+                }
+
+                MoneroComponents.StandardButton {
+                    Layout.topMargin: 10
+                    Layout.bottomMargin: 0
+                    small: true
+                    text: qsTr("Refresh") + translationManager.emptyString
+
+                    onClicked: {
+                        mgrcMenu.rcQRCode = mgrc.testEncrypt()
+                        mgrcMenu.rcAddress = mgrcMenu.rcHost + "/" + mgrcMenu.rcQRCode
+                    }
+                }
+            }
+
+            z: parent.z + 1
+        }
+
     }
 
     ListModel {

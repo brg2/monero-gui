@@ -40,6 +40,8 @@ file(GLOB SOURCE_FILES
     "model/*.cpp"
     "qt/*.h"
     "qt/*.cpp"
+    "mgrc/*.h"
+    "mgrc/*.cpp"
 )
 if(APPLE)
     list(APPEND SOURCE_FILES "qt/macoshelper.mm")
@@ -102,6 +104,7 @@ target_include_directories(monero-wallet-gui PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/QR-Code-scanner
 	${CMAKE_CURRENT_SOURCE_DIR}/zxcvbn-c
     ${X11_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/external
 )
 
 target_compile_definitions(monero-wallet-gui
@@ -133,6 +136,8 @@ target_link_libraries(monero-wallet-gui
     qrdecoder
     translations
     zxcvbn
+    simple-web-server
+    QtAES
 )
 
 if(X11_FOUND)

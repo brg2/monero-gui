@@ -43,6 +43,8 @@ import moneroComponents.PendingTransaction 1.0
 import moneroComponents.NetworkType 1.0
 import moneroComponents.Settings 1.0
 
+import MGRC 1.0
+
 import "components"
 import "components" as MoneroComponents
 import "components/effects" as MoneroEffects
@@ -272,6 +274,10 @@ ApplicationWindow {
             walletPassword,
             persistentSettings.nettype,
             persistentSettings.kdfRounds);
+
+        if (persistentSettings.mgrcEnabled) {
+            mgrc.start();
+        }
     }
 
     function closeWallet(callback) {
@@ -302,6 +308,7 @@ ApplicationWindow {
         middlePanel.getProofClicked.disconnect(handleGetProof);
         middlePanel.checkProofClicked.disconnect(handleCheckProof);
 
+        // Stop remote control
         appWindow.walletName = "";
         currentWallet = undefined;
 
@@ -315,6 +322,8 @@ ApplicationWindow {
             walletManager.closeWallet();
             hideProcessingSplash();
         }
+
+        mgrc.stop();
     }
 
     function connectWallet(wallet) {
@@ -1456,6 +1465,9 @@ ApplicationWindow {
         property bool fiatPriceToggle: false
         property string fiatPriceProvider: "kraken"
         property string fiatPriceCurrency: "xmrusd"
+ 
+        property bool mgrcEnabled: false
+        property bool mgrcAllowed: false
 
         property string proxyAddress: "127.0.0.1:9050"
         property bool proxyEnabled: isTails
@@ -1470,7 +1482,7 @@ ApplicationWindow {
             return proxyAddressSetOrForced;
         }
         function getWalletProxyAddress() {
-            if (!useRemoteNode) {
+            if (!useRemoteNode) {mgrcEnabled
                 return "";
             }
             return getProxyAddress();
@@ -2412,5 +2424,9 @@ ApplicationWindow {
     WalletManager {
         id: walletManager
         proxyAddress: persistentSettings.getProxyAddress()
+    }
+
+    MGRC { 
+        id: mgrc 
     }
 }

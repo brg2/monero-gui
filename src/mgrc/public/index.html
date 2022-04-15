@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/aes.min.js"></script>
+
+        <script>
+            var encrypted = window.location.hash.split('#')[1],
+                isRecover = encrypted.substr(0,1) == '?',
+                context = isRecover ? JSON.parse(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Base64.parse(encrypted.split('?')[1]))) : '',
+                _ps = isRecover ? context.ps : prompt("Please enter the 6 character pairing string"),
+                _k = isRecover ? CryptoJS.enc.Hex.parse(context.k) : CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_ps)),
+                _iv = isRecover ? CryptoJS.enc.Hex.parse(context.iv) : CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_ps)),
+                _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_iv.toString() + _ps)),
+                _p = window.location.origin + (isRecover ? ('/' + context.p) : window.location.pathname),
+                options = {
+                    mode: CryptoJS.mode.CBC,
+                    iv: _ivps,
+                    padding: CryptoJS.pad.Pkcs7
+                },
+                _jps = isRecover ? context.ps : CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8),
+                _jk = isRecover ? context.k : CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps))
+
+            if(_jk.toString() != _k.toString()) {
+                alert("Keys don't match")
+            }
+
+            function postAPI() {
+                var _ejson = CryptoJS.AES.encrypt(JSON.stringify({k: _k.toString()}), _k, options).toString()
+
+                $.ajax({
+                    url: _p,
+                    method: "POST",
+                    data: _ejson,
+                    success: function( crypResponse ) {
+                        if (!crypResponse) {
+                            return errHandler();
+                        }
+                        let jsonResponse = JSON.parse(CryptoJS.AES.decrypt(crypResponse, _k, options).toString(CryptoJS.enc.Utf8))
+                        if (!jsonResponse['k'] || !jsonResponse['iv'] || !jsonResponse['p'])
+                            return errHandler();
+                        // Connection success
+                        console.log('connection success');
+                        var _ok = CryptoJS.AES.encrypt("ok", _k, options).toString(),
+                            _lp = _p
+                        _k = CryptoJS.enc.Hex.parse(jsonResponse.k)
+                        _iv = CryptoJS.enc.Hex.parse(jsonResponse.iv)
+                        _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(jsonResponse.iv + _ps))
+                        _p = window.location.origin + '/' + jsonResponse.p
+
+                        options.iv = _ivps
+
+                        jsonResponse.ps = _ps
+
+                        strRecoverHash = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(JSON.stringify(jsonResponse)))
+
+                        // Save current context in hash if user reloads (not sent over network and changes every ~3 seconds)
+                        window.location.replace( '#?' + strRecoverHash);
+
+                        document.body.innerHTML = strRecoverHash
+
+                        $.ajax({
+                            url: _lp,
+                            method: "POST",
+                            data: _ok,
+                            success: function() {
+                                setTimeout(postAPI, 3000)
+                            },
+                            error: errHandler
+                        })
+                    },
+                    error: errHandler
+                })
+            }
+
+            function errHandler() {
+                alert("Error: Connection failed");
+            }
+
+            postAPI();
+        </script>
+    </body>
+</html>

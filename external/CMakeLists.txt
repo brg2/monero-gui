@@ -6,3 +6,8 @@ add_library(quirc STATIC
 )
 set_target_properties(quirc PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(quirc PUBLIC quirc/lib)
+
+add_subdirectory(simple-web-server)
+
+include(GenerateExportHeader)
+add_subdirectory(Qt-AES)

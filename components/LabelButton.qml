@@ -35,6 +35,8 @@ import "../components" as MoneroComponents
 Rectangle {
     signal clicked();
     property alias text: labelButtonText.text
+    property alias fontFamily: labelButtonText.font.family
+    property alias tooltip: tooltip.text
 
     id: labelButton
     color: MoneroComponents.Style.buttonBackgroundColorDisabled
@@ -55,7 +57,13 @@ Rectangle {
         color: MoneroComponents.Style.inlineButtonTextColor
     }
 
+    MoneroComponents.Tooltip {
+        id: tooltip
+        anchors.fill: parent
+    }
+
     MouseArea {
+        id: mouseArea
         cursorShape: Qt.PointingHandCursor
         anchors.fill: parent
         hoverEnabled: true
@@ -63,10 +71,14 @@ Rectangle {
         onEntered: {
             labelButton.color = MoneroComponents.Style.buttonBackgroundColorDisabledHover;
             labelButtonText.opacity = 0.8;
+            if(tooltip.text) {
+                tooltip.tooltipPopup.open();
+            }
         }
         onExited: {
             labelButton.color = MoneroComponents.Style.buttonBackgroundColorDisabled;
             labelButtonText.opacity = 1.0;
+            tooltip.tooltipPopup.close();
         }
     }
 }
