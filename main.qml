@@ -42,6 +42,7 @@ import moneroComponents.WalletManager 1.0
 import moneroComponents.PendingTransaction 1.0
 import moneroComponents.NetworkType 1.0
 import moneroComponents.Settings 1.0
+import moneroComponents.P2PoolManager 1.0
 
 import WebWallet 1.0
 
@@ -95,7 +96,7 @@ ApplicationWindow {
     readonly property string localDaemonAddress : "localhost:" + getDefaultDaemonRpcPort(persistentSettings.nettype)
     property string currentDaemonAddress;
     property int disconnectedEpoch: 0
-    property int estimatedBlockchainSize: persistentSettings.pruneBlockchain ? 40 : 105 // GB
+    property int estimatedBlockchainSize: persistentSettings.pruneBlockchain ? 55 : 150 // GB
     property alias viewState: rootItem.state
     property string prevSplashText;
     property bool splashDisplayedBeforeButtonRequest;
@@ -330,27 +331,6 @@ ApplicationWindow {
     function connectWallet(wallet) {
         currentWallet = wallet
 
-        // TODO:
-        // When the wallet variable is undefined, it yields a zero balance.
-        // This can scare users, restart the GUI (as a quick fix).
-        //
-        // To reproduce, follow these steps:
-        // 1) Open the GUI, load up a wallet that has a balance
-        // 2) Settings -> close wallet
-        // 3) Create a new wallet
-        // 4) Settings -> close wallet
-        // 5) Open the wallet from step 1
-
-        if(!wallet || wallet === undefined || wallet.path === undefined){
-            informationPopup.title  = qsTr("Error") + translationManager.emptyString;
-            informationPopup.text = qsTr("Couldn't open wallet: ") + 'please restart GUI.';
-            informationPopup.icon = StandardIcon.Critical
-            informationPopup.open()
-            informationPopup.onCloseCallback = function() {
-                appWindow.close();
-            }
-        }
-
         walletName = usefulName(wallet.path)
 
         viewOnly = currentWallet.viewOnly;
@@ -499,7 +479,7 @@ ApplicationWindow {
 
         // If wallet isnt connected, advanced wallet mode and no daemon is running - Ask
         if (appWindow.walletMode >= 2 && !persistentSettings.useRemoteNode && !walletInitialized && disconnected) {
-            daemonManager.runningAsync(persistentSettings.nettype, function(running) {
+            daemonManager.runningAsync(persistentSettings.nettype, persistentSettings.blockchainDataDir, function(running) {
                 if (!running) {
                     daemonManagerDialog.open();
                 }
@@ -511,7 +491,9 @@ ApplicationWindow {
             walletInitialized = true
 
             // check if daemon was already mining and add mining logo if true
-            middlePanel.advancedView.miningView.update();
+            if (!persistentSettings.useRemoteNode || persistentSettings.allowRemoteNodeMining) {
+                middlePanel.advancedView.miningView.update();
+            }
         }
     }
 
@@ -722,7 +704,8 @@ ApplicationWindow {
         // Daemon connected
         leftPanel.networkStatus.connected = currentWallet ? currentWallet.connected() : Wallet.ConnectionStatus_Disconnected
 
-        currentWallet.refreshHeightAsync();
+        if (currentWallet)
+            currentWallet.refreshHeightAsync();
     }
 
     function startDaemon(flags){
@@ -741,7 +724,8 @@ ApplicationWindow {
         if (splash) {
             appWindow.showProcessingSplash(qsTr("Waiting for daemon to stop..."));
         }
-        daemonManager.stopAsync(persistentSettings.nettype, function(result) {
+        p2poolManager.exit()
+        daemonManager.stopAsync(persistentSettings.nettype, persistentSettings.blockchainDataDir, function(result) {
             daemonStartStopInProgress = 0;
             if (splash) {
                 hideProcessingSplash();
@@ -1016,7 +1000,7 @@ ApplicationWindow {
 
     // called on "getProof"
     function handleGetProof(txid, address, message, amount) {
-        if (amount.length > 0) {
+        if (amount !== null && amount.length > 0) {
             var result = currentWallet.getReserveProof(false, currentWallet.currentSubaddressAccount, walletManager.amountFromString(amount), message)
             txProofComputed(null, result)
         } else {
@@ -1152,6 +1136,7 @@ ApplicationWindow {
             middlePanel.transferView.clearFields();
             middlePanel.receiveView.clearFields();
             middlePanel.historyView.clearFields();
+            middlePanel.advancedView.clearFields();
             // disable timers
             userInActivityTimer.running = false;
         });
@@ -1171,13 +1156,10 @@ ApplicationWindow {
     Timer {
         id: fiatPriceTimer
         interval: 1000 * 60;
-        running: persistentSettings.fiatPriceEnabled;
+        running: persistentSettings.fiatPriceEnabled && currentWallet !== undefined
         repeat: true
-        onTriggered: {
-            if(persistentSettings.fiatPriceEnabled)
-                appWindow.fiatApiRefresh();
-        }
-        triggeredOnStart: false
+        onTriggered: appWindow.fiatApiRefresh()
+        triggeredOnStart: true
     }
 
     function fiatApiParseTicker(url, resp, currency){
@@ -1316,14 +1298,6 @@ ApplicationWindow {
         leftPanel.balanceFiatString = bFiat;
     }
 
-    function fiatTimerStart(){
-        fiatPriceTimer.start();
-    }
-
-    function fiatTimerStop(){
-        fiatPriceTimer.stop();
-    }
-
     function fiatApiError(msg){
         console.log("fiatPriceError: " + msg);
     }
@@ -1379,11 +1353,6 @@ ApplicationWindow {
             openWallet("wizard");
         }
 
-        if(persistentSettings.fiatPriceEnabled){
-            appWindow.fiatApiRefresh();
-            appWindow.fiatTimerStart();
-        }
-
         const desktopEntryEnabled = (typeof builtWithDesktopEntry != "undefined") && builtWithDesktopEntry;
         if (persistentSettings.askDesktopShortcut && !persistentSettings.portable && desktopEntryEnabled) {
             persistentSettings.askDesktopShortcut = false;
@@ -1416,13 +1385,18 @@ ApplicationWindow {
         }
 
         property bool askDesktopShortcut: isLinux
+        property bool askStopLocalNode: true
         property string language: 'English (US)'
         property string language_wallet: 'English'
         property string locale: 'en_US'
         property string account_name
         property string wallet_path
         property bool   allow_background_mining : false
+        property bool   allow_p2pool_mining : false
+        property bool   allowRemoteNodeMining : false
         property bool   miningIgnoreBattery : true
+        property int    miningModeSelected: 0
+        property int    chainDropdownSelected: 0
         property var    nettype: NetworkType.MAINNET
         property int    restore_height : 0
         property bool   is_trusted_daemon : false  // TODO: drop after v0.17.2.0 release
@@ -1430,6 +1404,7 @@ ApplicationWindow {
         property bool   is_recovering_from_device : false
         property bool   customDecorations : true
         property string daemonFlags
+        property string p2poolFlags
         property int logLevel: 0
         property string logCategories: ""
         property string daemonUsername: "" // TODO: drop after v0.17.2.0 release
@@ -1439,7 +1414,7 @@ ApplicationWindow {
         property bool historyShowAdvanced: false
         property bool historyHumanDates: true
         property string blockchainDataDir: ""
-        property bool useRemoteNode: false
+        property bool useRemoteNode: isAndroid
         property string remoteNodeAddress: "" // TODO: drop after v0.17.2.0 release
         property string remoteNodesSerialized: JSON.stringify({
                 selected: 0,
@@ -2081,7 +2056,7 @@ ApplicationWindow {
             return;
         }
 
-        const simpleModeFlags = "--enable-dns-blocklist --out-peers 16";
+        const simpleModeFlags = "--enable-dns-blocklist --out-peers 16 --no-igd";
         if (appWindow.daemonRunning) {
             appWindow.stopDaemon(function() {
                 appWindow.startDaemon(simpleModeFlags)
@@ -2178,7 +2153,7 @@ ApplicationWindow {
             showProcessingSplash(qsTr("Checking local node status..."));
             const handler = function(running) {
                 hideProcessingSplash();
-                if (running) {
+                if (running && persistentSettings.askStopLocalNode) {
                     showDaemonIsRunningDialog(closeAccepted);
                 } else {
                     closeAccepted();
@@ -2188,7 +2163,7 @@ ApplicationWindow {
             if (currentWallet) {
                 handler(!currentWallet.disconnected);
             } else {
-                daemonManager.runningAsync(persistentSettings.nettype, handler);
+                daemonManager.runningAsync(persistentSettings.nettype, persistentSettings.blockchainDataDir, handler);
             }
         }
     }
@@ -2197,7 +2172,7 @@ ApplicationWindow {
         console.log("close accepted");
         // Close wallet non async on exit
         daemonManager.exit();
-        
+        p2poolManager.exit();
         closeWallet(Qt.quit);
     }
 
@@ -2303,7 +2278,7 @@ ApplicationWindow {
     }
 
     function getDefaultDaemonRpcPort(networkType) {
-        switch (networkType) {
+        switch (parseInt(networkType)) {
             case NetworkType.STAGENET:
                 return 38081;
             case NetworkType.TESTNET:

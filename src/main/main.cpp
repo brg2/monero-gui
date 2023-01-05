@@ -36,7 +36,6 @@
 #include <QObject>
 #include <QDesktopWidget>
 #include <QScreen>
-#include <QRegExp>
 #include <QThread>
 
 #include <version.h>
@@ -81,6 +80,7 @@
 // IOS exclusions
 #ifndef Q_OS_IOS
 #include "daemon/DaemonManager.h"
+#include "p2pool/P2PoolManager.h"
 #endif
 
 #if defined(Q_OS_WIN)
@@ -206,6 +206,13 @@ int main(int argc, char *argv[])
 #endif
 
     qputenv("QML_DISABLE_DISK_CACHE", "1");
+
+    for (int i = 0; i < argc; i++) {
+        if (QString(argv[i]).contains("platformpluginpath")) {
+            qCritical() << "Setting -platformpluginpath as an argument is disabled"; // CVE-2021-3401
+            return 1;
+        }
+    }
 
     MainApp app(argc, argv);
 
@@ -405,6 +412,8 @@ Verify update binary using 'shasum'-compatible (SHA256 algo) output signed by tw
 #ifndef Q_OS_IOS
     qmlRegisterUncreatableType<DaemonManager>("moneroComponents.DaemonManager", 1, 0, "DaemonManager",
                                                    "DaemonManager can't be instantiated directly");
+    qmlRegisterUncreatableType<P2PoolManager>("moneroComponents.P2PoolManager", 1, 0, "P2PoolManager",
+                                                   "P2PoolManager can't be instantiated directly");
 #endif
     qmlRegisterUncreatableType<AddressBookModel>("moneroComponents.AddressBookModel", 1, 0, "AddressBookModel",
                                                         "AddressBookModel can't be instantiated directly");
@@ -466,7 +475,9 @@ Verify update binary using 'shasum'-compatible (SHA256 algo) output signed by tw
 // Exclude daemon manager from IOS
 #ifndef Q_OS_IOS
     DaemonManager daemonManager;
+    P2PoolManager p2poolManager;
     engine.rootContext()->setContextProperty("daemonManager", &daemonManager);
+    engine.rootContext()->setContextProperty("p2poolManager", &p2poolManager);
 #endif
 
     engine.rootContext()->setContextProperty("isWindows", isWindows);
@@ -497,7 +508,11 @@ Verify update binary using 'shasum'-compatible (SHA256 algo) output signed by tw
     engine.rootContext()->setContextProperty("homePath", QDir::homePath());
     engine.rootContext()->setContextProperty("applicationDirectory", QApplication::applicationDirPath());
     engine.rootContext()->setContextProperty("idealThreadCount", QThread::idealThreadCount());
+#ifdef WITH_UPDATER
     engine.rootContext()->setContextProperty("disableCheckUpdatesFlag", parser.isSet(disableCheckUpdatesOption));
+#else
+    engine.rootContext()->setContextProperty("disableCheckUpdatesFlag", true);
+#endif
     engine.rootContext()->setContextProperty("socksProxyFlag", parser.value(socksProxyOption));
     engine.rootContext()->setContextProperty("socksProxyFlagSet", parser.isSet(socksProxyOption));
 

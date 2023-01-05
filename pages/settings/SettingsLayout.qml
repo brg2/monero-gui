@@ -158,6 +158,12 @@ Rectangle {
             onMoved: persistentSettings.lockOnUserInActivityInterval = value
         }
 
+        MoneroComponents.CheckBox {
+            checked: persistentSettings.askStopLocalNode
+            onClicked: persistentSettings.askStopLocalNode = !persistentSettings.askStopLocalNode
+            text: qsTr("Ask to stop local node during program exit") + translationManager.emptyString
+        }
+
         //! Manage pricing
         RowLayout {
             MoneroComponents.CheckBox {
@@ -168,7 +174,6 @@ Rectangle {
                     if (!checked) {
                         console.log("Disabled price conversion");
                         persistentSettings.fiatPriceEnabled = false;
-                        appWindow.fiatTimerStop();
                     }
                 }
             }
@@ -235,8 +240,6 @@ Rectangle {
                 onClicked: {
                     console.log("Enabled price conversion");
                     persistentSettings.fiatPriceEnabled = true;
-                    appWindow.fiatApiRefresh();
-                    appWindow.fiatTimerStart();
                 }
             }
         }
