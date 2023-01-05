@@ -76,7 +76,7 @@
 #include "qt/macoshelper.h"
 #endif
 
-#include "mgrc/mgrc.h"
+#include "webwallet/webwallet.h"
 
 // IOS exclusions
 #ifndef Q_OS_IOS
@@ -368,7 +368,7 @@ Verify update binary using 'shasum'-compatible (SHA256 algo) output signed by tw
                                    << " - dpi: " << dpi << " - ratio:" << calculated_ratio;
 
     // registering types for QML
-    qmlRegisterType<mgrc>("MGRC", 1, 0, "MGRC");
+    qmlRegisterType<WebWallet>("WebWallet", 1, 0, "WebWallet");
 
     qmlRegisterType<clipboardAdapter>("moneroComponents.Clipboard", 1, 0, "Clipboard");
     qmlRegisterType<Downloader>("moneroComponents.Downloader", 1, 0, "Downloader");
@@ -552,8 +552,6 @@ Verify update binary using 'shasum'-compatible (SHA256 algo) output signed by tw
     QObject::connect(eventFilter, SIGNAL(mouseReleased(QVariant,QVariant,QVariant)), rootObject, SLOT(mouseReleased(QVariant,QVariant,QVariant)));
     QObject::connect(eventFilter, SIGNAL(userActivity()), rootObject, SLOT(userActivity()));
     QObject::connect(eventFilter, SIGNAL(uriHandler(QUrl)), ipc, SLOT(parseCommand(QUrl)));
-    
-    mgrc::testEncrypt();
 
     return app.exec();
 }

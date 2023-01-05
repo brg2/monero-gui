@@ -30,7 +30,7 @@ import QtQuick 2.9
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.0
 import QtQuick.Dialogs 1.2
-import MGRC 1.0
+import WebWallet 1.0
 
 import "../../js/Utils.js" as Utils
 import "../../js/Windows.js" as Windows
@@ -41,7 +41,7 @@ Rectangle {
     Layout.fillWidth: true
     property alias layoutHeight: settingsUI.height
 
-    MGRC { id: mgrc }
+    WebWallet { id: webwallet }
 
     ColumnLayout {
         id: settingsUI
@@ -91,7 +91,7 @@ Rectangle {
             text: qsTr("Light theme") + translationManager.emptyString
             toggleOnClick: false
             onClicked: {
-                MoneroComponents.Style.blackTheme = !MoneroComponents.Style.blackTheme;
+                persistentSettings.blackTheme = MoneroComponents.Style.blackTheme = !MoneroComponents.Style.blackTheme;
             }
         }
         
@@ -283,29 +283,30 @@ Rectangle {
             }
         }
 
+        // WebWallet - Monero GUI Web wallet
         MoneroComponents.CheckBox {
-            id: mgrcCheckbox
-            checked: persistentSettings.mgrcEnabled
-            text: qsTr("Remote control") + translationManager.emptyString
+            id: webwalletCheckbox
+            checked: persistentSettings.webwalletEnabled
+            text: qsTr("Enable web wallet") + translationManager.emptyString
             onClicked: {
-                persistentSettings.mgrcEnabled = !persistentSettings.mgrcEnabled;
-                if (persistentSettings.mgrcEnabled) {
-                    mgrc.start();
+                persistentSettings.webwalletEnabled = !persistentSettings.webwalletEnabled;
+                if (persistentSettings.webwalletEnabled) {
+                    webwallet.start();
                 } else {
-                    mgrc.stop();
+                    webwallet.stop();
                 }
             }
         }
 
         ColumnLayout {
             // Feature needs to be double enabled for security purposes (miss-clicks)
-            visible: persistentSettings.mgrcEnabled && !persistentSettings.mgrcAllowed
+            visible: persistentSettings.webwalletEnabled && !persistentSettings.webwalletAllowed
             spacing: 0
             Layout.topMargin: 5
             Layout.leftMargin: 36
 
             MoneroComponents.WarningBox {
-                text: qsTr("Enabling remote control exposes your wallet to external control through the Internet.") + translationManager.emptyString;
+                text: qsTr("Notice: All wallet information shared between your mobile and desktop wallet is encrypted. Discovering your public IP exposes your address to the api source.") + translationManager.emptyString;
             }
 
             MoneroComponents.StandardButton {
@@ -315,32 +316,32 @@ Rectangle {
                 text: qsTr("Confirm and enable") + translationManager.emptyString
 
                 onClicked: {
-                    console.log("Enabled remote control");
-                    persistentSettings.mgrcAllowed = true;
-                    //appWindow.fiatApiRefresh();
-                    //appWindow.fiatTimerStart();
+                    console.log("webwallet: Enabled remote control");
+                    persistentSettings.webwalletAllowed = true;
                 }
             }
         }
 
         GridLayout {
-            id: mgrcMenu
-            visible: persistentSettings.mgrcEnabled && persistentSettings.mgrcAllowed
+            id: webwalletMenu
+            visible: persistentSettings.webwalletEnabled && persistentSettings.webwalletAllowed
             columns: 2
             Layout.fillWidth: true
             Layout.leftMargin: 36
             columnSpacing: 10
 
             property int qrCodeLen: 16
-            property string rcHost: "http://" + mgrc.getPublicIPJSON() + ":8080"
-            // property string rcHost: "http://localhost:8080"
-            property string rcQRCode: mgrc.testEncrypt()
-            property string rcAddress: rcHost + "/" + rcQRCode
+            // Hack: Allows manual refresh of properties
+            property bool a: true
+            property string host: a || !a ? "http://" + webwallet.getPublicIPJSON() + ":" + webwallet.getPort() : null
+            property string qrCode: a || !a ? webwallet.run(currentWallet, persistentSettings.askPasswordBeforeSending, walletPassword, persistentSettings.blackTheme, usefulName(persistentSettings.wallet_path)) : null
+            property string pairCode: a || !a ? webwallet.getPairingCode() : null
+            property string address: host + "/" + qrCode
 
             Rectangle {
-                id: rcQRImg
+                id: qrImg
                 color: "white"
-                visible: persistentSettings.mgrcEnabled
+                visible: persistentSettings.webwalletEnabled
 
                 property int qrCodeSize: 110
 
@@ -353,13 +354,13 @@ Rectangle {
                 radius: 5
 
                 Image {
-                    id: rcQRCodeImage
+                    id: qrCodeImage
                     anchors.fill: parent
                     anchors.margins: 1
 
                     smooth: false
                     fillMode: Image.PreserveAspectFit
-                    source: "image://qrcode/" + mgrcMenu.rcAddress
+                    source: "image://qrcode/" + webwalletMenu.address
                 }
             }
 
@@ -367,41 +368,55 @@ Rectangle {
                 spacing: 0
                 Layout.topMargin: 0
                 Layout.leftMargin: 0
-                //anchors.top: parent.top
-
-                // MoneroComponents.WarningBox {
-                //     text: qsTr("Enabling remote control exposes your wallet to external control through the Internet.") + translationManager.emptyString;
-                // }
 
                 MoneroComponents.LineEdit {
-                    id: mgrcAddress
-                    placeholderText: qsTr("Remote Control Address") + translationManager.emptyString
-                    placeholderFontFamily: MoneroComponents.Style.fontRegular.name
-                    placeholderFontBold: false
-                    placeholderFontSize: 15
-                    placeholderColor: MoneroComponents.Style.defaultFontColor
-                    placeholderOpacity: 0.35
+                    id: webwalletAddress
                     labelFontSize: 14
                     backgroundColor: "transparent"
                     fontColor: MoneroComponents.Style.defaultFontColor
                     fontBold: false
                     fontSize: 15
-                    text: mgrcMenu.rcAddress
-                    labelText: 'Address'
+                    text: webwalletMenu.address
+                    labelText: 'URL'
                     readOnly: true
                     copyButton: true
                     openLinkButton: true
                 }
 
-                MoneroComponents.StandardButton {
-                    Layout.topMargin: 10
-                    Layout.bottomMargin: 0
-                    small: true
-                    text: qsTr("Refresh") + translationManager.emptyString
+                RowLayout {
+                    Layout.fillWidth: true
 
-                    onClicked: {
-                        mgrcMenu.rcQRCode = mgrc.testEncrypt()
-                        mgrcMenu.rcAddress = mgrcMenu.rcHost + "/" + mgrcMenu.rcQRCode
+                    MoneroComponents.StandardButton {
+                        Layout.topMargin: 10
+                        Layout.bottomMargin: 0
+                        small: true
+                        text: qsTr("Refresh") + translationManager.emptyString
+
+                        onClicked: {
+                            // Regenerate keys
+                            webwallet.refresh(false)
+                            // Hack: Refresh properties
+                            webwalletMenu.a = !webwalletMenu.a
+                        }
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    MoneroComponents.StandardButton {
+                        Layout.topMargin: 10
+                        Layout.bottomMargin: 0
+                        small: true
+                        text: qsTr("Pair code") + translationManager.emptyString
+
+                        onClicked: {
+                            informationPopup.title  = qsTr("Pair code") + translationManager.emptyString
+                            informationPopup.text = qsTr(webwalletMenu.pairCode)
+                            informationPopup.icon = StandardIcon.Information
+                            informationPopup.open()
+                            informationPopup.onCloseCallback = null
+                        }
                     }
                 }
             }

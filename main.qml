@@ -43,7 +43,7 @@ import moneroComponents.PendingTransaction 1.0
 import moneroComponents.NetworkType 1.0
 import moneroComponents.Settings 1.0
 
-import MGRC 1.0
+import WebWallet 1.0
 
 import "components"
 import "components" as MoneroComponents
@@ -275,8 +275,8 @@ ApplicationWindow {
             persistentSettings.nettype,
             persistentSettings.kdfRounds);
 
-        if (persistentSettings.mgrcEnabled) {
-            mgrc.start();
+        if (persistentSettings.webwalletEnabled) {
+            webwallet.start();
         }
     }
 
@@ -323,7 +323,8 @@ ApplicationWindow {
             hideProcessingSplash();
         }
 
-        mgrc.stop();
+        // Stop remote control
+        webwallet.stop();
     }
 
     function connectWallet(wallet) {
@@ -833,11 +834,14 @@ ApplicationWindow {
     }
 
     function onTransactionCreated(pendingTransaction, addresses, paymentId, mixinCount) {
-        console.log("Transaction created");
+        console.error("Transaction created");
         txConfirmationPopup.bottomText.text = "";
         transaction = pendingTransaction;
         // validate address;
-        if (transaction.status !== PendingTransaction.Status_Ok) {
+        if (!txConfirmationPopup.visible) {
+            // Assume web transaction 
+            currentWallet.commitTransactionAsync(transaction);
+        } else if (transaction.status !== PendingTransaction.Status_Ok) {
             console.error("Can't create transaction: ", transaction.errorString);
             if (currentWallet.connected() == Wallet.ConnectionStatus_WrongVersion) {
                 txConfirmationPopup.errorText.text  = qsTr("Can't create transaction: Wrong daemon version: ") + transaction.errorString
@@ -853,7 +857,7 @@ ApplicationWindow {
             // deleting transaction object, we don't want memleaks
             currentWallet.disposeTransaction(transaction);
         } else {
-            console.log("Transaction created, amount: " + walletManager.displayAmount(transaction.amount)
+            console.error("Transaction created, amount: " + walletManager.displayAmount(transaction.amount)
                     + ", fee: " + walletManager.displayAmount(transaction.fee));
 
             // here we update txConfirmationPopup
@@ -874,8 +878,8 @@ ApplicationWindow {
 
     // called on "transfer"
     function handlePayment(recipients, paymentId, mixinCount, priority, description, createFile) {
-        console.log("Creating transaction: ")
-        console.log("\trecipients: ", recipients,
+        console.error("Creating transaction: ");
+        console.error("\trecipients: ", recipients,
                     ", payment_id: ", paymentId,
                     ", mixins: ", mixinCount,
                     ", priority: ", priority,
@@ -973,6 +977,10 @@ ApplicationWindow {
     }
 
     function onTransactionCommitted(success, transaction, txid) {
+        if (!splash.visible) {
+            // Assume web transaction. Skip tx pop
+            return
+        }
         hideProcessingSplash();
         if (!success) {
             console.log("Error committing transaction: " + transaction.errorString);
@@ -1466,8 +1474,8 @@ ApplicationWindow {
         property string fiatPriceProvider: "kraken"
         property string fiatPriceCurrency: "xmrusd"
  
-        property bool mgrcEnabled: false
-        property bool mgrcAllowed: false
+        property bool webwalletEnabled: false
+        property bool webwalletAllowed: false
 
         property string proxyAddress: "127.0.0.1:9050"
         property bool proxyEnabled: isTails
@@ -2426,7 +2434,7 @@ ApplicationWindow {
         proxyAddress: persistentSettings.getProxyAddress()
     }
 
-    MGRC { 
-        id: mgrc 
+    WebWallet { 
+        id: webwallet 
     }
 }

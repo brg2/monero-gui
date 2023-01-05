@@ -1,6 +1,7 @@
 add_subdirectory(QR-Code-scanner)
 add_subdirectory(openpgp)
 add_subdirectory(zxcvbn-c)
+add_subdirectory(webwallet)
 
 qt5_add_resources(RESOURCES ../qml.qrc)
 
@@ -40,8 +41,8 @@ file(GLOB SOURCE_FILES
     "model/*.cpp"
     "qt/*.h"
     "qt/*.cpp"
-    "mgrc/*.h"
-    "mgrc/*.cpp"
+    "webwallet/*.h"
+    "webwallet/*.cpp"
 )
 if(APPLE)
     list(APPEND SOURCE_FILES "qt/macoshelper.mm")

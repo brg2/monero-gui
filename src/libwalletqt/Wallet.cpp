@@ -576,6 +576,7 @@ void Wallet::createTransactionAsync(
     PendingTransaction::Priority priority)
 {
     m_scheduler.run([this, destinationAddresses, payment_id, destinationAmounts, mixin_count, priority] {
+        qCritical() << "Emitting transaction created";
         PendingTransaction *tx = createTransaction(destinationAddresses, payment_id, destinationAmounts, mixin_count, priority);
         emit transactionCreated(tx, destinationAddresses, payment_id, mixin_count);
     });
