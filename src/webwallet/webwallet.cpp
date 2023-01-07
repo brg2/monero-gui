@@ -374,7 +374,7 @@ Q_INVOKABLE void WebWallet::start() {
         
         try {
             auto web_root_path = boost::dll::program_location().parent_path();
-            web_root_path /= "webwallet/app";
+            web_root_path /= "webwallet";
             auto path = boost::filesystem::canonical(web_root_path / strPath);
             bool isIndex = false;
             // Check if path is within web_root_path

@@ -26,12 +26,12 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using namespace std;
 #include <boost/filesystem.hpp>
 #include <fstream>      // std::ifstream
 
 #include <simple-web-server/server_http.hpp>
 using HttpServer = SimpleWeb::Server<SimpleWeb::HTTP>;
+using namespace std;
 
 class WebWalletFileServer {
     public:
