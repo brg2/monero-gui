@@ -1467,8 +1467,15 @@ ApplicationWindow {
         function getWalletProxyAddress() {
             if (!useRemoteNode) {mgrcEnabled
                 return "";
+            } else {
+                const remoteAddress = remoteNodesModel.currentRemoteNode().address;
+                // skip proxy when using localhost remote node
+                if (remoteAddress.startsWith("127.0.0.1:") || remoteAddress.startsWith("localhost:")) {
+                    return "";
+                } else {
+                    return getProxyAddress();
+                }
             }
-            return getProxyAddress();
         }
 
         Component.onCompleted: {
