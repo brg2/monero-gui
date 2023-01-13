@@ -286,7 +286,7 @@ Rectangle {
             }
         }
 
-        // WebWallet - Monero GUI Web wallet
+        // Monero GUI Web wallet
         MoneroComponents.CheckBox {
             id: webwalletCheckbox
             checked: persistentSettings.webwalletEnabled
@@ -394,6 +394,7 @@ Rectangle {
                         Layout.bottomMargin: 0
                         small: true
                         text: qsTr("Refresh") + translationManager.emptyString
+                        tooltip: qsTr("Regenerate URL and pairing code") + translationManager.emptyString
 
                         onClicked: {
                             // Regenerate keys
@@ -411,10 +412,11 @@ Rectangle {
                         Layout.topMargin: 10
                         Layout.bottomMargin: 0
                         small: true
-                        text: qsTr("Pair code") + translationManager.emptyString
+                        text: qsTr("Pairing code") + translationManager.emptyString
+                        tooltip: qsTr("Display the connection pairing code") + translationManager.emptyString
 
                         onClicked: {
-                            informationPopup.title  = qsTr("Pair code") + translationManager.emptyString
+                            informationPopup.title  = qsTr("Pairing code") + translationManager.emptyString
                             informationPopup.text = qsTr(webwalletMenu.pairCode)
                             informationPopup.icon = StandardIcon.Information
                             informationPopup.open()

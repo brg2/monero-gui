@@ -155,6 +155,8 @@ Q_INVOKABLE void WebWallet::start() {
         if ((curPath != _ap.toStdString() && curPath != _lap.toStdString()) ||
             (!useLast && curPath == _lap.toStdString())) {
             // qCritical() << "Wrong path";
+            *response << "HTTP/1.1 404 Not Found\r\n"
+                << "Content-Length: 0\r\n\r\n";
             return;
         }
 

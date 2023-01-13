@@ -1,0 +1,125 @@
+body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+.form-control {
+    /* transition: background-color 0.5s ease, color 0.5s ease; */
+}
+
+body.dark {
+    background-color: #1b1b1b;
+    color: white;
+}
+#controls {
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    align-items: center;
+    flex-grow: 0;
+    width: 300px;
+}
+#controls input:not(#password) {
+    /* width: 270px; */
+}
+
+#controls .input-group button {
+    border-color: #9b9b9b !important;
+    fill: #6c757d;
+    width: 45px;
+    transition: fill .15s ease-in-out, 
+        color .15s ease-in-out, 
+        background-color .15s ease-in-out, 
+        border-color .15s ease-in-out,
+        box-shadow .15s ease-in-out;
+}
+
+#controls .input-group button:hover {
+    fill: white;
+}
+
+body.dark #controls .input-group button {
+    fill: #898989;
+    color: #898989 !important;
+    width: 45px;
+}
+
+body.dark #controls .input-group button:hover {
+    fill: white;
+    color: white !important;
+}
+
+.buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    /* margin-top: 20px; */
+    position: relative;
+    align-items: center;
+    width: 100%;
+}
+
+body.dark .form-control {
+    color: #ced4da;
+    background-color: transparent;
+}
+body.dark .form-control::placeholder {
+    color: #ced4da;
+}
+#moneroLogo {
+    width: 26px;
+    height: 26px;
+    background: white;
+    padding: 2px;
+    border-radius: 100%;
+}
+#moneroTitle {
+    text-transform: uppercase;
+    margin-left: 5px;
+    font-weight: bold;
+    font-size: 26px;
+    line-height: normal;
+}
+#title {
+    margin-bottom: 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+#qrcode {
+    margin-top: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: .5rem;
+    border: 1px solid #ced4da;
+    cursor: pointer;
+}
+#amountButton {
+    font-size: 150%;
+}
+.spacer {
+    display: flex;
+    flex-grow: 1;
+}
+
+/* Monero primary button */
+.btn-primary-xmr {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #ff6600;
+    --bs-btn-border-color: #ff6600;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #bf4c00;
+    --bs-btn-hover-border-color: #bf4c00;
+    --bs-btn-focus-shadow-rgb: 60,153,110;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #bf4c00;
+    --bs-btn-active-border-color: #bf4c00;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #793000;
+    --bs-btn-disabled-border-color: #793000;
+}
