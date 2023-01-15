@@ -1451,6 +1451,8 @@ ApplicationWindow {
  
         property bool webwalletEnabled: false
         property bool webwalletAllowed: false
+        property int webWalletPortNumStart: 56700
+        property int webWalletPortNumEnd: 56800
 
         property string proxyAddress: "127.0.0.1:9050"
         property bool proxyEnabled: isTails

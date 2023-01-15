@@ -381,6 +381,7 @@ Rectangle {
             spacing: 20;
 
             MoneroComponents.StandardButton {
+                height: 24
                 small: true
                 text: qsTr("Copy to clipboard") + translationManager.emptyString
                 onClicked: {

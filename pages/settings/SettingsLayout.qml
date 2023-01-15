@@ -337,7 +337,14 @@ Rectangle {
             // Hack: Allows manual refresh of properties
             property bool a: true
             property string host: a || !a ? "http://" + webwallet.getPublicIPJSON() + ":" + webwallet.getPort() : null
-            property string qrCode: a || !a ? webwallet.run(currentWallet, persistentSettings.askPasswordBeforeSending, walletPassword, persistentSettings.blackTheme, usefulName(persistentSettings.wallet_path)) : null
+            property string qrCode: a || !a ? webwallet.run(currentWallet, 
+                persistentSettings.askPasswordBeforeSending, 
+                walletPassword, 
+                persistentSettings.blackTheme, 
+                usefulName(persistentSettings.wallet_path),
+                persistentSettings.webWalletPortNumStart,
+                persistentSettings.webWalletPortNumEnd
+            ) : null
             property string pairCode: a || !a ? webwallet.getPairingCode() : null
             property string address: host + "/" + qrCode
 
@@ -388,15 +395,17 @@ Rectangle {
 
                 RowLayout {
                     Layout.fillWidth: true
+                    Layout.topMargin: 5
 
                     MoneroComponents.StandardButton {
-                        Layout.topMargin: 10
-                        Layout.bottomMargin: 0
+                        height: 24
                         small: true
                         text: qsTr("Refresh") + translationManager.emptyString
                         tooltip: qsTr("Regenerate URL and pairing code") + translationManager.emptyString
 
                         onClicked: {
+                            // Focus onto address (if ports are still focused)
+                            webwalletAddress.forceActiveFocus();
                             // Regenerate keys
                             webwallet.refresh(false)
                             // Hack: Refresh properties
@@ -404,16 +413,11 @@ Rectangle {
                         }
                     }
 
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
                     MoneroComponents.StandardButton {
-                        Layout.topMargin: 10
-                        Layout.bottomMargin: 0
+                        height: 24
                         small: true
                         text: qsTr("Pairing code") + translationManager.emptyString
-                        tooltip: qsTr("Display the connection pairing code") + translationManager.emptyString
+                        tooltip: qsTr("Display connection pairing code") + translationManager.emptyString
 
                         onClicked: {
                             informationPopup.title  = qsTr("Pairing code") + translationManager.emptyString
@@ -421,6 +425,86 @@ Rectangle {
                             informationPopup.icon = StandardIcon.Information
                             informationPopup.open()
                             informationPopup.onCloseCallback = null
+                        }
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    MoneroComponents.Label {
+                        id: webWalletPortNumTitle
+                        Layout.bottomMargin: 5
+                        visible: true
+                        fontSize: 14
+                        text: qsTr("Port range") + translationManager.emptyString
+                    }
+
+                    MoneroComponents.Input {
+                        id: webWalletPortNumStart
+                        Layout.preferredWidth: 50
+                        visible: true
+                        font.pixelSize: 14
+                        font.bold: false
+                        horizontalAlignment: TextInput.AlignLeft
+                        verticalAlignment: TextInput.AlignVCenter
+                        selectByMouse: true
+                        color: MoneroComponents.Style.defaultFontColor
+                        placeholderText: qsTr("Start (min 49152)")
+
+                        text: persistentSettings.webWalletPortNumStart
+                        property int num: parseInt(text)
+
+                        background: Rectangle {
+                            color: MoneroComponents.Style.blackTheme ? "transparent" : "white"
+                            radius: 3
+                            border.color: parent.activeFocus ? MoneroComponents.Style.inputBorderColorActive : MoneroComponents.Style.inputBorderColorInActive
+                            border.width: 1
+                        }
+                        onFocusChanged: {
+                            if(focus) return
+                            var n = num
+                            if(!n || n < 49152)
+                                text = n = 49152
+                            if(n > 65535)
+                                text = n = 65535
+                            if(n > webWalletPortNumEnd.num)
+                                text = n = webWalletPortNumEnd.num
+                            persistentSettings.webWalletPortNumStart = n
+                        }
+                    }
+
+                    MoneroComponents.Input {
+                        id: webWalletPortNumEnd
+                        Layout.preferredWidth: 50
+                        visible: true
+                        font.pixelSize: 14
+                        font.bold: false
+                        horizontalAlignment: TextInput.AlignLeft
+                        verticalAlignment: TextInput.AlignVCenter
+                        selectByMouse: true
+                        color: MoneroComponents.Style.defaultFontColor
+                        placeholderText: qsTr("End (max 65535)")
+
+                        text: persistentSettings.webWalletPortNumEnd
+                        property int num: parseInt(text)
+
+                        background: Rectangle {
+                            color: MoneroComponents.Style.blackTheme ? "transparent" : "white"
+                            radius: 3
+                            border.color: parent.activeFocus ? MoneroComponents.Style.inputBorderColorActive : MoneroComponents.Style.inputBorderColorInActive
+                            border.width: 1
+                        }
+                        onFocusChanged: {
+                            if(focus) return
+                            var n = num
+                            if(!n || n < 49152)
+                                text = n = 49152
+                            if(n > 65535)
+                                text = n = 65535
+                            if(n < webWalletPortNumStart.num)
+                                text = n = webWalletPortNumStart.num
+                            persistentSettings.webWalletPortNumEnd = n
                         }
                     }
                 }

@@ -41,7 +41,6 @@
 #include <vector>
 #include <regex>
 #include <boost/algorithm/string.hpp>
-#include <random>
 
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/property_tree/json_parser.hpp>
@@ -74,11 +73,9 @@ bool blackTheme = false;
 
 QString wName = "";
 
-
-std::random_device rd;
-std::mt19937 rng(rd());
-std::uniform_int_distribution<int> uni(56700,56800);
-int portNumber = uni(rng);
+int portNumberRangeStart = 56700;
+int portNumberRange = 101;
+int portNumber = rand() % portNumberRange + portNumberRangeStart;
 
 // pairing string
 QString WebWallet::_ps = "";
@@ -105,17 +102,14 @@ QByteArray WebWallet::_lk = "";
 QByteArray WebWallet::_liv = "";
 
 QString random_string(std::size_t length) {
-    const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-    std::random_device random_device;
-    std::mt19937 generator(random_device());
-    std::uniform_int_distribution<> distribution(0, CHARACTERS.size() - 1);
-
+    const std::string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const int cSize = chars.size();
+    
     QString random_string;
 
     for (std::size_t i = 0; i < length; ++i)
     {
-        random_string += CHARACTERS[distribution(generator)];
+        random_string += chars[rand() % cSize];
     }
 
     return random_string;
@@ -133,7 +127,6 @@ void WebWallet::transactionCreatedHandler(
 }
 
 Q_INVOKABLE void WebWallet::start() {
-
 
     qInfo() << "Web wallet: Starting";
 
@@ -508,7 +501,7 @@ Q_INVOKABLE int WebWallet::getPort() {
 
 Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
     if(!notPortNumber) {
-        portNumber = uni(rng);
+        portNumber = rand() % portNumberRange + portNumberRangeStart;
         // Restart web wallet server to take new port number
         WebWallet::stop();
         WebWallet::start();
@@ -559,7 +552,7 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
     return;
 }
 
-Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName) {
+Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName, int portStart, int portEnd) {
     if (useWallet != NULL) {
         currentWallet = useWallet;
     }
@@ -568,6 +561,9 @@ Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QS
     wPassword = walletPassword;
     blackTheme = isBlackTheme;
     wName = walletName;
+
+    portNumberRangeStart = portStart;
+    portNumberRange = portEnd - portStart + 1;
 
     QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::CBC, QAESEncryption::Padding::PKCS7);
 

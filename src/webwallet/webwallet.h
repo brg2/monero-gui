@@ -44,7 +44,7 @@ class WebWallet : public QObject {
         Q_INVOKABLE static QString getPublicIPJSON();
         Q_INVOKABLE static int getPort();
         Q_INVOKABLE static void refresh(bool notPortNumber);
-        Q_INVOKABLE static QString run(Wallet * useWallet, bool requirePassword, QString walletPassword, bool blackTheme, QString walletName);
+        Q_INVOKABLE static QString run(Wallet * useWallet, bool requirePassword, QString walletPassword, bool blackTheme, QString walletName, int portStart, int portEnd);
         Q_INVOKABLE static QString getPairingCode();
 
     private:
