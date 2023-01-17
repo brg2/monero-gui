@@ -290,7 +290,7 @@ Rectangle {
         MoneroComponents.CheckBox {
             id: webwalletCheckbox
             checked: persistentSettings.webwalletEnabled
-            text: qsTr("Enable web wallet") + translationManager.emptyString
+            text: qsTr("Web wallet") + translationManager.emptyString
             onClicked: {
                 persistentSettings.webwalletEnabled = !persistentSettings.webwalletEnabled;
                 if (persistentSettings.webwalletEnabled) {
@@ -336,14 +336,16 @@ Rectangle {
             property int qrCodeLen: 16
             // Hack: Allows manual refresh of properties
             property bool a: true
-            property string host: a || !a ? "http://" + webwallet.getPublicIPJSON() + ":" + webwallet.getPort() : null
+            property string host: a || !a ? "http://" + webwallet.getPublicIPJSON() + ":" + 
+                webwallet.getPort(
+                    persistentSettings.webWalletPortNumStart, 
+                    persistentSettings.webWalletPortNumEnd
+                ) : null
             property string qrCode: a || !a ? webwallet.run(currentWallet, 
                 persistentSettings.askPasswordBeforeSending, 
                 walletPassword, 
                 persistentSettings.blackTheme, 
-                usefulName(persistentSettings.wallet_path),
-                persistentSettings.webWalletPortNumStart,
-                persistentSettings.webWalletPortNumEnd
+                usefulName(persistentSettings.wallet_path)
             ) : null
             property string pairCode: a || !a ? webwallet.getPairingCode() : null
             property string address: host + "/" + qrCode
@@ -551,4 +553,3 @@ Rectangle {
         console.log('SettingsLayout loaded');
     }
 }
-

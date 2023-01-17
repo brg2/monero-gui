@@ -20,8 +20,7 @@
                     Monero
                 </div>
             </div>
-            <div class="mb-1 input-group">
-                <!-- <input id="address" placeholder="Address (4ArcAX...EAcSUH)" class="form-control form-control-lg"/> -->
+            <div class="mb-2 input-group">
                 <input id="address" placeholder="Address" class="form-control form-control-lg"/>
                 <button onclick="scanQR();" class="btn btn-outline-secondary" type="button" title="Scan QR Code">
                     <svg width="20" height="20" viewBox="0 0 16 16">
@@ -30,22 +29,28 @@
                         <path d="M7 9H2v5h5V9Zm-4 1h3v3H3v-3Zm8-6h1v1h-1V4Z"/>
                         <path d="M9 2h5v5H9V2Zm1 1v3h3V3h-3ZM8 8v2h1v1H8v1h2v-2h1v2h1v-1h2v-1h-3V8H8Zm2 2H9V9h1v1Zm4 2h-1v1h-2v1h3v-2Zm-4 2v-1H8v1h2Z"/>
                         <path d="M12 9h2V8h-2v1Z"/>
-                    </svg>  
+                    </svg>
                 </button>
               </div>
-            <div class="mb-1 input-group">
-                <!-- <input id="amount" placeholder="Amount (1.23)" class="form-control form-control-lg"/> -->
+            <div class="mb-2 input-group">
                 <input id="amount" placeholder="Amount" class="form-control form-control-lg"/>
                 <button id="amountButton" onclick="useBalance();" class="btn btn-outline-secondary" type="button" title="Use full balance">∞</button>
             </div>
-            <div class="mb-1 w-100">
+            <div class="mb-2 w-100" id="password-container">
                 <input id="password" type="password" class="form-control form-control-lg" placeholder="Password" style="display: none;"/>
             </div>
-            <div class="mb-1 w-100 d-flex justify-content-between">
+            <div class="mb-4 w-100 d-flex justify-content-between">
                 <button onclick="clearInputs();" title="Reset inputs" class="btn btn-secondary">Reset</button>
+                <button id="toggleSelfQRButton" ondblclick="showSelfQR()" onmousedown="showSelfQR()" onmouseup="hideSelfQR()" ontouchstart="showSelfQR()" ontouchend="hideSelfQR()" title="Show/hide self address" class="btn btn-secondary" style="fill:white">
+                    <svg width="20" height="20" viewBox="0 0 16 16">
+                        <path d="M7 2H2v5h5V2ZM3 3h3v3H3V3Zm2 8H4v1h1v-1Z"/>
+                        <path d="M7 9H2v5h5V9Zm-4 1h3v3H3v-3Zm8-6h1v1h-1V4Z"/>
+                        <path d="M9 2h5v5H9V2Zm1 1v3h3V3h-3ZM8 8v2h1v1H8v1h2v-2h1v2h1v-1h2v-1h-3V8H8Zm2 2H9V9h1v1Zm4 2h-1v1h-2v1h3v-2Zm-4 2v-1H8v1h2Z"/>
+                    </svg>
+                </button>
                 <button onclick="postAPIInputs();" title="Send XMR (Connecting...)" class="btn btn-light" id="sendButton">Send</button>
             </div>
-            <div id="qrcode" onclick="selectSelfAddress('selfaddress')"></div>
+            <div id="qrcode" onclick="selectSelfAddress('selfaddress')" class="invisible"></div>
         </div>
         <div class="spacer"></div>
         <script src="app.js"></script>

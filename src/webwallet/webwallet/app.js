@@ -92,14 +92,14 @@ function postAPI(payload) {
             $('#amountButton').attr('title', `Use full balance (${formatter.format(balance)} XMR)`)
 
             // Show qr code of self address
-            if (jsonResponse.self && selfaddress != jsonResponse.self) {
+            if (jsonResponse.self && selfaddress != jsonResponse.self || !connected) {
                 selfaddress = jsonResponse.self
                 qrcode.makeCode(selfaddress)
                 if (jsonResponse.name)
                     document.title = jsonResponse.name + " (" + selfaddress.slice(0, 4) + "..." + selfaddress.slice(-4) + ")"
             }
 
-            $("#password").css("display", reqPassword ? "block" : "none")
+            $('#password-container')[reqPassword ? 'removeClass' : 'addClass']('d-none')
             
             if(blackTheme)
                 $(document.body).addClass('dark')
@@ -202,9 +202,19 @@ function setStatus(status) {
     s.attr('class', 'btn')
     s.attr('title', 'Send XMR' + c[status][1])
     s.addClass(c[status][0])
+    if(status == 'disconnected')
+        document.title = "Disconnected"
 }
 
 function useBalance() {
     if(balance && !isNaN(balance))
         $('#amount').val(balance)
+}
+
+function showSelfQR() {
+    $('#qrcode').removeClass('invisible')
+}
+
+function hideSelfQR() {
+    $('#qrcode').addClass('invisible')
 }

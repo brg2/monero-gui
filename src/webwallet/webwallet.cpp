@@ -434,9 +434,6 @@ Q_INVOKABLE void WebWallet::stop() {
     }
     server.stop();
     server_thread.detach();
-    _k.clear();
-    _iv.clear();
-    _ap = "";
     started = false;
     
     qInfo() << "Web wallet: Stopped";
@@ -494,8 +491,27 @@ Q_INVOKABLE QString WebWallet::getPublicIPJSON() {
 
 }
 
-Q_INVOKABLE int WebWallet::getPort() {
+Q_INVOKABLE int WebWallet::getPort(int portStart, int portEnd) {
+    if(portStart < 49152)
+        portStart = 49152;
+    if(portEnd < 49152)
+        portEnd = 49152;
+    if(portStart > 65535)
+        portStart = 65535;
+    if(portEnd > 65535)
+        portEnd = 65535;
+    if(portEnd < portStart)
+        portEnd = portStart;
+    portNumberRangeStart = portStart;
+    portNumberRange = portEnd - portStart + 1;
     // qCritical() << "Server port:" << portNumber;
+
+    if(portNumber < portStart || portNumber > portEnd) {
+        portNumber = rand() % portNumberRange + portNumberRangeStart;
+        // Restart web wallet server to take new port number
+        WebWallet::stop();
+        WebWallet::start();
+    }
     return portNumber;
 }
 
@@ -552,7 +568,7 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
     return;
 }
 
-Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName, int portStart, int portEnd) {
+Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName) {
     if (useWallet != NULL) {
         currentWallet = useWallet;
     }
@@ -561,9 +577,6 @@ Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QS
     wPassword = walletPassword;
     blackTheme = isBlackTheme;
     wName = walletName;
-
-    portNumberRangeStart = portStart;
-    portNumberRange = portEnd - portStart + 1;
 
     QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::CBC, QAESEncryption::Padding::PKCS7);
 
