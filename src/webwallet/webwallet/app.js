@@ -5,21 +5,17 @@ const formatter = new Intl.NumberFormat('en-US', {
 })
 
 let encrypted = window.location.hash.split('#')[1],
-    isRecover = encrypted.substr(0,1) == '?',
+    isRecover = encrypted.slice(0,1) == '?',
     context = isRecover ? JSON.parse(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Base64.parse(encrypted.split('?')[1]))) : '',
-    _ps = isRecover ? context.ps : prompt("Please enter the 6 character pairing code"),
-    _k = isRecover ? CryptoJS.enc.Hex.parse(context.k) : CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_ps)),
-    _iv = isRecover ? CryptoJS.enc.Hex.parse(context.iv) : CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_ps)),
-    _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_iv.toString() + _ps)),
-    _p = window.location.origin + (isRecover ? ('/' + context.p) : window.location.pathname),
-    options = {
-        mode: CryptoJS.mode.CBC,
-        iv: _ivps,
-        padding: CryptoJS.pad.Pkcs7
-    },
-    _jps = isRecover ? context.ps : CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8),
-    _jk = isRecover ? context.k : CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps)),
-    _address = isRecover && context.address ? context.address : "",
+    _ps,
+    _k,
+    _iv,
+    _ivps,
+    _p,
+    options = {},
+    _jps,
+    _jk,
+    _address,
     skippedParams = false,
     pingTimeout,
     reqPassword,
@@ -29,9 +25,43 @@ let encrypted = window.location.hash.split('#')[1],
     currentStatus,
     balance,
     retrying = false
+    pcLength = 6
+
+function init() {
+    if(!isRecover)
+        return promptPairCode()
+    else {
+        hidePCInput()
+    }
+    _ps = context.ps
+    _k = CryptoJS.enc.Hex.parse(context.k)
+    _iv = CryptoJS.enc.Hex.parse(context.iv)
+    _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_iv.toString() + _ps))
+    _p = window.location.origin + (isRecover ? ('/' + context.p) : window.location.pathname)
+    options = {
+        mode: CryptoJS.mode.CBC,
+        iv: _ivps,
+        padding: CryptoJS.pad.Pkcs7
+    }
+    _jps = isRecover ? context.ps : CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8)
+    _jk = isRecover ? context.k : CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps))
+    _address = isRecover && context.address ? context.address : ""
+
+    if(_ps == '' || _jk.toString() != _k.toString()) {
+        alert("Incorrect pairing code. Please try again.")
+        promptPairCode()
+    } else {
+        $('#controls').removeClass('d-none')
+        postAPI()
+    }
+}
 
 function promptPairCode() {
-    _ps = prompt("Please enter the 6 character pairing code").trim()
+    showPCInput();
+}
+
+function processPairCode() {
+    _ps = getPCInput()
     
     _k = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_ps)),
     _iv = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_ps)),
@@ -39,16 +69,16 @@ function promptPairCode() {
     options.iv = _ivps
     _jps = CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8),
     _jk = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps))
+    _p = window.location.origin + window.location.pathname
 
     if(_ps == '' || _jk.toString() != _k.toString()) {
-    alert("Incorrect pairing code. Please try again.")
+        alert("Incorrect pairing code. Please try again.")
         promptPairCode()
+    } else {
+        hidePCInput()
+        $('#controls').removeClass('d-none')
+        postAPI()
     }
-}
-
-if(_ps == '' || _jk.toString() != _k.toString()) {
-    alert("Incorrect pairing code. Please try again.")
-    promptPairCode()
 }
 
 function postAPI(payload) {
@@ -218,3 +248,77 @@ function showSelfQR() {
 function hideSelfQR() {
     $('#qrcode').addClass('invisible')
 }
+
+function showPCInput() {
+    clearPairingCode()
+    $('#pcInputContainer').removeClass('d-none')
+}
+
+function hidePCInput() {
+    $('#pcInputContainer').addClass('d-none')
+}
+
+function pcInputEnter(padEl) {
+    if(!padEl) return
+    let pcInputNum = getEmptyPCInput()
+    if(!pcInputNum) return
+    $('#pcInput' + pcInputNum).val($(padEl).text())
+    if(pcInputNum == 6)
+        setTimeout(processPairCode)
+}
+
+function clearPairingCode() {
+    for(let i = 1; i < 7; i++) {
+        $('#pcInput' + i).val('')
+    }
+    setTimeout(gotoNextPCInput)
+}
+
+function getEmptyPCInput() {
+    let lastNum 
+    for(let i = 6; i > 0; i--) {
+        if($('#pcInput' + i).val() == '')
+            lastNum = i;
+        else if(lastNum)
+            return lastNum
+    }
+    return lastNum
+}
+
+function getPCInput() {
+    var pc = ''
+    for(let i = 1; i < 7; i++) {
+        pc += $('#pcInput' + i).val()
+    }
+    return pc
+}
+
+function setPCInput(strText, offset = 0) {
+    for(let i = 1 + (offset); i < 7; i++) {
+        $('#pcInput' + i).val(strText.slice(i - 1, i))
+    }
+}
+
+function pcInputPaste(e, offset) {
+    var pasteText = e.clipboardData.getData('text')
+    setPCInput(pasteText, offset)
+    e.currentTarget.blur()
+    if(getPCInput().length == pcLength)
+        setTimeout(processPairCode)
+}
+
+function pcInputText(inputEl) {
+    inputEl.value = inputEl.value.toUpperCase()
+    if(inputEl.value != '')
+        setTimeout(gotoNextPCInput)
+}
+
+function gotoNextPCInput() {
+    if(getEmptyPCInput())
+        $('#pcInput' + getEmptyPCInput()).focus()
+    else
+        if(getPCInput().length == pcLength)
+            setTimeout(processPairCode)
+}
+
+init();

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>Monero</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="icon" href="./monero.svg" type="image/svg+xml" />
@@ -11,9 +12,9 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/aes.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     </head>
-    <body onload="postAPI();">
+    <body>
         <div class="spacer"></div>
-        <div id="controls">
+        <div id="controls" class="d-none">
             <div id="title">
                 <img id="moneroLogo" src="monero.svg"/>
                 <div id="moneroTitle">
@@ -37,7 +38,7 @@
                 <button id="amountButton" onclick="useBalance();" class="btn btn-outline-secondary" type="button" title="Use full balance">∞</button>
             </div>
             <div class="mb-2 w-100" id="password-container">
-                <input id="password" type="password" class="form-control form-control-lg" placeholder="Password" style="display: none;"/>
+                <input id="password" type="password" class="form-control form-control-lg" placeholder="Password"/>
             </div>
             <div class="mb-4 w-100 d-flex justify-content-between">
                 <button onclick="clearInputs();" title="Reset inputs" class="btn btn-secondary">Reset</button>
@@ -53,6 +54,60 @@
             <div id="qrcode" onclick="selectSelfAddress('selfaddress')" class="invisible"></div>
         </div>
         <div class="spacer"></div>
+        <div id="pcInputContainer">
+            <div class="spacer"></div>
+            <div id="pcInputTitle">Enter Pairing Code</div>
+            <div id="pcInputPad">
+                <div class="input-group" id="pcInputGroup">
+                    <input id="pcInput1" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event)" oninput="pcInputText(this)">
+                    <input id="pcInput2" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event, 1)" oninput="pcInputText(this)">
+                    <input id="pcInput3" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event, 2)" oninput="pcInputText(this)">
+                    <input id="pcInput4" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event, 3)" oninput="pcInputText(this)">
+                    <input id="pcInput5" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event, 4)" oninput="pcInputText(this)">
+                    <input id="pcInput6" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event, 5)" oninput="pcInputText(this)">
+                    <button onclick="clearPairingCode();" class="btn btn-outline-secondary">×</button>
+                </div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">A</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">B</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">C</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">D</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">E</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">F</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">G</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">H</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">I</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">J</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">K</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">L</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">M</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">N</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">O</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">P</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">Q</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">R</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">S</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">T</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">U</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">V</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">W</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">X</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">Y</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">Z</div>
+                
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">1</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">2</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">3</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">4</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">5</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">6</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">7</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">8</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">9</div>
+                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">0</div>
+            </div>
+            <div class="spacer"></div>
+        </div>
+
         <script src="app.js"></script>
         <script>
             if (_address) {

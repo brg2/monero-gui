@@ -115,6 +115,12 @@ QString random_string(std::size_t length) {
     return random_string;
 }
 
+QString random_string_caps(std::size_t length) {
+    QString rstring = random_string(length);
+
+    return rstring.toUpper();
+}
+
 void WebWallet::transactionCreatedHandler(
     PendingTransaction *tx, 
     QVector<QString> &destinationAddresses, 
@@ -527,7 +533,7 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
 
     pt::ptree outJSON;
 
-    _ps = random_string(6);
+    _ps = random_string_caps(6);
     _p = random_string(10);
     // Use same path for API until new path is generated
     _ap = _p;
@@ -553,7 +559,7 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
 
     // Debugging information
     //string estrJSON = encryption.encode(QString::fromStdString(strJSON).toUtf8(), _k, _ivps).toBase64().toStdString();
-    // qCritical() << "PS - Pairing string: " << _ps << Qt::endl;
+    qCritical() << "PS - Pairing string: " << _ps << Qt::endl;
     // qCritical() << "P - Path: " << _p << Qt::endl;
     // qCritical() << "K - key: " << _k.toHex() << Qt::endl;
     // qCritical() << "IV - iv: " << _iv.toHex() << Qt::endl;

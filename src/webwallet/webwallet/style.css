@@ -124,3 +124,64 @@ body.dark .form-control::placeholder {
     --bs-btn-disabled-bg: #793000;
     --bs-btn-disabled-border-color: #793000;
 }
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+
+
+/* Pairing Code Input Pad */
+#pcInputContainer {
+    position: fixed;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    /* background-color: black; */
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+#pcInputPad {
+    width: 300px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.pc-input-pad {
+    width: 50px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+}
+
+.pc-input-pad:hover {
+    background-color: #f1f1f1;
+}
+
+#pcInputGroup {
+    margin-bottom: 20px;
+}
+
+.pc-input {
+    padding: 10px;
+    text-align: center;
+}
+
+#pcInputTitle {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+/* End Pairing Code Input Pad */
