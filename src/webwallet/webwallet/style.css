@@ -1,10 +1,11 @@
-body {
+#app {
     display: flex;
     flex-direction: column;
     width: 100%;
     height: 100%;
     position: absolute;
     padding-top: 10px;
+    align-items: center;
 }
 
 .form-control {
@@ -15,6 +16,7 @@ body.dark {
     background-color: #1b1b1b;
     color: white;
 }
+
 #controls {
     display: flex;
     flex-direction: column;
@@ -23,8 +25,14 @@ body.dark {
     flex-grow: 0;
     width: 300px;
 }
+
 #controls input:not(#password) {
     /* width: 270px; */
+}
+
+button {
+    display: flex !important;
+    align-items: center;
 }
 
 #controls .input-group button {
@@ -67,9 +75,11 @@ body.dark .form-control {
     color: #ced4da;
     background-color: transparent;
 }
+
 body.dark .form-control::placeholder {
     color: #ced4da;
 }
+
 #moneroLogo {
     width: 26px;
     height: 26px;
@@ -77,6 +87,7 @@ body.dark .form-control::placeholder {
     padding: 2px;
     border-radius: 100%;
 }
+
 #moneroTitle {
     text-transform: uppercase;
     margin-left: 5px;
@@ -84,6 +95,7 @@ body.dark .form-control::placeholder {
     font-size: 26px;
     line-height: normal;
 }
+
 #title {
     margin-bottom: 20px;
     text-align: center;
@@ -91,17 +103,31 @@ body.dark .form-control::placeholder {
     flex-direction: row;
     align-items: center;
 }
+
 #qrcode {
     margin-top: 20px;
-    padding: 15px;
-    background: white;
-    border-radius: .5rem;
-    border: 1px solid #ced4da;
     cursor: pointer;
 }
+
+#qrcode > svg {
+    border-radius: .5rem;
+    transition: filter ease 0.5s;
+}
+
+#qrcode.blur > svg {
+    filter: blur(250px);
+
+    /* Hack for safari */
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
+    -moz-transform: translate3d(0, 0, 0);
+}
+
 #amountButton {
     font-size: 150%;
 }
+
 .spacer {
     display: flex;
     flex-grow: 1;
@@ -135,23 +161,15 @@ body.dark .form-control::placeholder {
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
-
 /* Pairing Code Input Pad */
 #pcInputContainer {
-    position: fixed;
-    top: 0px;
-    bottom: 0px;
-    left: 0px;
-    right: 0px;
-    /* background-color: black; */
-    z-index: 10;
+    width: 300px;
     display: flex;
     align-items: center;
     flex-direction: column;
 }
 
 #pcInputPad {
-    width: 300px;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -171,7 +189,11 @@ body.dark .form-control::placeholder {
     background-color: #f1f1f1;
 }
 
-#pcInputGroup {
+body.dark .pc-input-pad:hover {
+    background-color: #3b3b3b;
+}
+
+#pcInputFields {
     margin-bottom: 20px;
 }
 

@@ -10,114 +10,104 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/aes.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <script src="qrcode-svg.min.js"></script>
+        <script src="dotdom.min.js"></script>
+        <script src="app.js"></script>
     </head>
     <body>
-        <div class="spacer"></div>
-        <div id="controls" class="d-none">
-            <div id="title">
-                <img id="moneroLogo" src="monero.svg"/>
-                <div id="moneroTitle">
-                    Monero
-                </div>
-            </div>
-            <div class="mb-2 input-group">
-                <input id="address" placeholder="Address" class="form-control form-control-lg"/>
-                <button onclick="scanQR();" class="btn btn-outline-secondary" type="button" title="Scan QR Code">
-                    <svg width="20" height="20" viewBox="0 0 16 16">
-                        <path d="M0 .5A.5.5 0 0 1 .5 0h3a.5.5 0 0 1 0 1H1v2.5a.5.5 0 0 1-1 0v-3Zm12 0a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V1h-2.5a.5.5 0 0 1-.5-.5ZM.5 12a.5.5 0 0 1 .5.5V15h2.5a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 .5-.5Zm15 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1H15v-2.5a.5.5 0 0 1 .5-.5ZM4 4h1v1H4V4Z"/>
-                        <path d="M7 2H2v5h5V2ZM3 3h3v3H3V3Zm2 8H4v1h1v-1Z"/>
-                        <path d="M7 9H2v5h5V9Zm-4 1h3v3H3v-3Zm8-6h1v1h-1V4Z"/>
-                        <path d="M9 2h5v5H9V2Zm1 1v3h3V3h-3ZM8 8v2h1v1H8v1h2v-2h1v2h1v-1h2v-1h-3V8H8Zm2 2H9V9h1v1Zm4 2h-1v1h-2v1h3v-2Zm-4 2v-1H8v1h2Z"/>
-                        <path d="M12 9h2V8h-2v1Z"/>
-                    </svg>
-                </button>
-              </div>
-            <div class="mb-2 input-group">
-                <input id="amount" placeholder="Amount" class="form-control form-control-lg"/>
-                <button id="amountButton" onclick="useBalance();" class="btn btn-outline-secondary" type="button" title="Use full balance">∞</button>
-            </div>
-            <div class="mb-2 w-100" id="password-container">
-                <input id="password" type="password" class="form-control form-control-lg" placeholder="Password"/>
-            </div>
-            <div class="mb-4 w-100 d-flex justify-content-between">
-                <button onclick="clearInputs();" title="Reset inputs" class="btn btn-secondary">Reset</button>
-                <button id="toggleSelfQRButton" ondblclick="showSelfQR()" onmousedown="showSelfQR()" onmouseup="hideSelfQR()" ontouchstart="showSelfQR()" ontouchend="hideSelfQR()" title="Show/hide self address" class="btn btn-secondary" style="fill:white">
-                    <svg width="20" height="20" viewBox="0 0 16 16">
-                        <path d="M7 2H2v5h5V2ZM3 3h3v3H3V3Zm2 8H4v1h1v-1Z"/>
-                        <path d="M7 9H2v5h5V9Zm-4 1h3v3H3v-3Zm8-6h1v1h-1V4Z"/>
-                        <path d="M9 2h5v5H9V2Zm1 1v3h3V3h-3ZM8 8v2h1v1H8v1h2v-2h1v2h1v-1h2v-1h-3V8H8Zm2 2H9V9h1v1Zm4 2h-1v1h-2v1h3v-2Zm-4 2v-1H8v1h2Z"/>
-                    </svg>
-                </button>
-                <button onclick="postAPIInputs();" title="Send XMR (Connecting...)" class="btn btn-light" id="sendButton">Send</button>
-            </div>
-            <div id="qrcode" onclick="selectSelfAddress('selfaddress')" class="invisible"></div>
-        </div>
-        <div class="spacer"></div>
-        <div id="pcInputContainer">
-            <div class="spacer"></div>
-            <div id="pcInputTitle">Enter Pairing Code</div>
-            <div id="pcInputPad">
-                <div class="input-group" id="pcInputGroup">
-                    <input id="pcInput1" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event)" oninput="pcInputText(this)">
-                    <input id="pcInput2" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event, 1)" oninput="pcInputText(this)">
-                    <input id="pcInput3" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event, 2)" oninput="pcInputText(this)">
-                    <input id="pcInput4" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event, 3)" oninput="pcInputText(this)">
-                    <input id="pcInput5" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event, 4)" oninput="pcInputText(this)">
-                    <input id="pcInput6" class="form-control form-control-lg pc-input" maxlength="1" onpaste="pcInputPaste(event, 5)" oninput="pcInputText(this)">
-                    <button onclick="clearPairingCode();" class="btn btn-outline-secondary">×</button>
-                </div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">A</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">B</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">C</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">D</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">E</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">F</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">G</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">H</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">I</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">J</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">K</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">L</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">M</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">N</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">O</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">P</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">Q</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">R</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">S</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">T</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">U</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">V</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">W</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">X</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">Y</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">Z</div>
-                
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">1</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">2</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">3</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">4</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">5</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">6</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">7</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">8</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">9</div>
-                <div class="pc-input-pad noselect" onclick="pcInputEnter(this)">0</div>
-            </div>
-            <div class="spacer"></div>
-        </div>
-
-        <script src="app.js"></script>
+        <div id="app"></div>
         <script>
-            if (_address) {
-                $('#address').val(_address);
-            }
+            const {a,br,button,circle,div,form,h1,iframe,img,input,link,meta,object,option,path,pre,script,select,span,svg,textarea} = H
 
-            var qrcode = new QRCode($("#qrcode")[0], {
-                width: 270,
-                height: 270
-            });
+            const 
+                qricon = [
+                    path({d: "M7 2H2v5h5V2ZM3 3h3v3H3V3Zm2 8H4v1h1v-1Z"}),
+                    path({d: "M7 9H2v5h5V9Zm-4 1h3v3H3v-3Zm8-6h1v1h-1V4Z"}),
+                    path({d: "M9 2h5v5H9V2Zm1 1v3h3V3h-3ZM8 8v2h1v1H8v1h2v-2h1v2h1v-1h2v-1h-3V8H8Zm2 2H9V9h1v1Zm4 2h-1v1h-2v1h3v-2Zm-4 2v-1H8v1h2Z"}),
+                ],
+                qrscanicon = [
+                    path({d: "M0 .5A.5.5 0 0 1 .5 0h3a.5.5 0 0 1 0 1H1v2.5a.5.5 0 0 1-1 0v-3Zm12 0a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V1h-2.5a.5.5 0 0 1-.5-.5ZM.5 12a.5.5 0 0 1 .5.5V15h2.5a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 .5-.5Zm15 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1H15v-2.5a.5.5 0 0 1 .5-.5ZM4 4h1v1H4V4Z"})
+                ].concat(qricon).concat([
+                    path({d: "M12 9h2V8h-2v1Z"})
+                ])
+
+            function app(p, s) {
+                s.connected = s.connected || false
+                s.retrying = s.retrying || false
+                s.reqPassword = s.reqPassword || false
+                s.balance = s.balance || ''
+
+                setTimeout(() => {
+                    // Set the address field to a QR address scanned
+                    if (_address && $('#address').val() == '') {
+                        $('#address').val(_address);
+                    }
+                })
+
+                return [
+                    div.spacer(),
+                    s.connected ? div({id: "controls"}, [
+                        div({id: "title"}, [
+                            img({id: "moneroLogo", src: "monero.svg"}),
+                            div({id: "moneroTitle"}, "Monero")
+                        ]),
+                        div['mb-2']['input-group']({}, [
+                            input['form-control']['form-control-lg']({id: "address", placeholder: "Address", value: ''}),
+                            button.btn['btn-outline-secondary']({title: "Scan QR Code", onclick: scanQR}, 
+                                svg({width: 20, height: 20, viewBox: "0 0 16 16"}, qrscanicon)
+                            )
+                        ]),
+                        div['mb-2']['input-group']({}, [
+                            input['form-control']['form-control-lg']({id: "amount", placeholder: "Amount"}),
+                            button.btn['btn-outline-secondary']({id: "amountButton", title: "Use full balance" + (s.balance ? ` (${formatter.format(s.balance)} XMR)` : ''), onclick: useBalance}, "∞")
+                        ]),
+                        s.reqPassword ? div['mb-2']['w-100']({id: "password-container"}, [
+                            input['form-control']['form-control-lg']({id: "password", type: "password", placeholder: "Password"})
+                        ]) : null,
+                        div['mb-2']['w-100']['d-flex']['justify-content-between']({}, [
+                            button.btn['btn-secondary']({title: "Reset inputs", onclick: clearInputs}, "Reset"),
+                            button.btn['btn-secondary']({id: "toggleSelfQRButton", title: "Show/hide self address", style: {fill: "white"},
+                                ondblclick: showSelfQR, onmousedown: showSelfQR, onmouseup: hideSelfQR, ontouchstart: showSelfQR, ontouchend: hideSelfQR},
+                                svg({width: 20, height: 20, viewBox: "0 0 16 16"}, qricon)
+                            ),
+                            button.btn[s.retrying ? 'btn-danger' : 'btn-primary-xmr']({id: "sendButton", title: "Send XMR" + (s.retrying ? ' (Connecting...)' : ''), onclick: postAPIInputs}, "Send"),
+                        ]),
+                        div['blur']({id: 'qrcode', onclick: () => selectSelfAddress('selfaddress'), innerHTML: qrcode})
+                    ]) : div({id: "pcInputContainer"}, 
+                        div({id: "pcInputTitle"}, "Enter Pairing Code"),
+                        div['input-group']({id: "pcInputFields"},
+                            Array.from({length: pcLength}, (n, i) => 
+                                input['form-control']['form-control-lg']['pc-input']({
+                                    id: `pcInput${i+1}`,
+                                    maxlength: 1,
+                                    onpaste: (e) => pcInputPaste(e, i),
+                                    oninput: (e) => pcInputText(e),
+                                    value: ''
+                                })
+                            ).concat([
+                                button.btn['btn-outline-secondary']({onclick: clearPairingCode}, "×")
+                            ])
+                        ),
+                        div({id: 'pcInputPad'},
+                            'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('').map(l => 
+                                div.noselect['pc-input-pad']({
+                                    onclick: () => pcInputEnter(l)
+                                }, l)
+                            )
+                        )
+                    ),
+                    div.spacer()
+                ]
+            }
+            
+            R(
+                H(app),
+                $('#app')[0]
+            )
+
+        </script>
+        <script>
+            init();
         </script>
     </body>
 </html>

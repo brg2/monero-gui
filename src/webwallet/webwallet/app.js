@@ -15,7 +15,7 @@ let encrypted = window.location.hash.split('#')[1],
     options = {},
     _jps,
     _jk,
-    _address,
+    _address = isRecover && context.address ? context.address : "",
     skippedParams = false,
     pingTimeout,
     reqPassword,
@@ -24,15 +24,13 @@ let encrypted = window.location.hash.split('#')[1],
     blackTheme,
     currentStatus,
     balance,
-    retrying = false
-    pcLength = 6
+    retrying = false,
+    pcLength = 6,
+    qrcode = ''
 
 function init() {
     if(!isRecover)
-        return promptPairCode()
-    else {
-        hidePCInput()
-    }
+        return clearPairingCode()
     _ps = context.ps
     _k = CryptoJS.enc.Hex.parse(context.k)
     _iv = CryptoJS.enc.Hex.parse(context.iv)
@@ -45,19 +43,13 @@ function init() {
     }
     _jps = isRecover ? context.ps : CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8)
     _jk = isRecover ? context.k : CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps))
-    _address = isRecover && context.address ? context.address : ""
 
     if(_ps == '' || _jk.toString() != _k.toString()) {
         alert("Incorrect pairing code. Please try again.")
-        promptPairCode()
+        clearPairingCode()
     } else {
-        $('#controls').removeClass('d-none')
         postAPI()
     }
-}
-
-function promptPairCode() {
-    showPCInput();
 }
 
 function processPairCode() {
@@ -73,10 +65,8 @@ function processPairCode() {
 
     if(_ps == '' || _jk.toString() != _k.toString()) {
         alert("Incorrect pairing code. Please try again.")
-        promptPairCode()
+        clearPairingCode()
     } else {
-        hidePCInput()
-        $('#controls').removeClass('d-none')
         postAPI()
     }
 }
@@ -91,11 +81,6 @@ function postAPI(payload) {
     // Clear any calls of this method to avoid duplicates
     if(pingTimeout) 
         pingTimeout = clearTimeout(pingTimeout)
-
-
-    if(!connected) {
-        setStatus('connecting')
-    }
 
     $.ajax({
         url: _p,
@@ -114,22 +99,28 @@ function postAPI(payload) {
             _iv = CryptoJS.enc.Hex.parse(jsonResponse.iv)
             _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(jsonResponse.iv + _ps))
             _p = window.location.origin + '/' + jsonResponse.p
-            reqPassword = jsonResponse.rp == "1"
-            blackTheme = jsonResponse.bt == "1"
-            balance = jsonResponse.bal / 1000000000000
 
-            // $('#amount').attr('placeholder', `Amount (${formatter.format(balance)})`)
-            $('#amountButton').attr('title', `Use full balance (${formatter.format(balance)} XMR)`)
+            let newReqPassword = jsonResponse.rp == "1"
+            if (newReqPassword != reqPassword) {
+                reqPassword = newReqPassword
+                app.data.reqPassword = reqPassword
+            }
+
+            blackTheme = jsonResponse.bt == "1"
+
+            let newbalance = jsonResponse.bal / 1000000000000
+            if (newbalance != balance) {
+                balance = newbalance
+                app.data.balance = balance
+            }
 
             // Show qr code of self address
             if (jsonResponse.self && selfaddress != jsonResponse.self || !connected) {
                 selfaddress = jsonResponse.self
-                qrcode.makeCode(selfaddress)
+                qrcode = new QRCode({content: selfaddress, width: 300, height: 300, padding: 3}).svg()
                 if (jsonResponse.name)
                     document.title = jsonResponse.name + " (" + selfaddress.slice(0, 4) + "..." + selfaddress.slice(-4) + ")"
             }
-
-            $('#password-container')[reqPassword ? 'removeClass' : 'addClass']('d-none')
             
             if(blackTheme)
                 $(document.body).addClass('dark')
@@ -151,9 +142,12 @@ function postAPI(payload) {
             // Save current context in hash if user reloads (not sent over network and changes every ~3 seconds)
             window.location.replace( '#?' + strRecoverHash);
 
-            setStatus('connected')
-            connected = true;
-            retrying = false;
+            if(!connected) {
+                connected = true;
+                retrying = false;
+                app.data.connected = true;
+                app.data.retrying = false;
+            }
 
             pingTimeout = setTimeout(postAPI, 3000)
         },
@@ -169,16 +163,18 @@ function errHandler(e) {
         pingTimeout = clearTimeout(pingTimeout)
 
     if(!connected && !retrying) {
-        $('body').css('display', 'none')
         alert('A connection has already been used for this URL and pairing code. To start a new web wallet session, click "Refresh" in the web wallet interface settings and try again.')
         window.close();
         return;
     } else {
-        retrying = true;
+        if(!retrying) {
+            retrying = true;
+            app.data.retrying = true;
+            document.title = "Disconnected"
+        }
         pingTimeout = setTimeout(postAPI, 3000)
     }
 
-    setStatus('disconnected')
     connected = false;
 }
 
@@ -215,54 +211,24 @@ function selectSelfAddress(elId) {
         prompt("", selfaddress)
 }
 
-function setStatus(status) {
-    // Use/set current status
-    if(status == currentStatus)
-        return
-    currentStatus = status
-    let s = $('#sendButton'),
-        c = {
-            // Connected - Monero Orange
-            connected: ['btn-primary-xmr', ''],
-            // Connecting - Yellow
-            connecting: ['btn-warning', ' (Connecting...)'],
-            // Disconnected - Red
-            disconnected: ['btn-danger', ' (Disconnected)']
-        }
-    s.attr('class', 'btn')
-    s.attr('title', 'Send XMR' + c[status][1])
-    s.addClass(c[status][0])
-    if(status == 'disconnected')
-        document.title = "Disconnected"
-}
-
 function useBalance() {
     if(balance && !isNaN(balance))
         $('#amount').val(balance)
 }
 
 function showSelfQR() {
-    $('#qrcode').removeClass('invisible')
+    $('#qrcode').removeClass('blur')
 }
 
 function hideSelfQR() {
-    $('#qrcode').addClass('invisible')
+    $('#qrcode').addClass('blur')
 }
 
-function showPCInput() {
-    clearPairingCode()
-    $('#pcInputContainer').removeClass('d-none')
-}
-
-function hidePCInput() {
-    $('#pcInputContainer').addClass('d-none')
-}
-
-function pcInputEnter(padEl) {
-    if(!padEl) return
+function pcInputEnter(character) {
+    if(!character) return
     let pcInputNum = getEmptyPCInput()
     if(!pcInputNum) return
-    $('#pcInput' + pcInputNum).val($(padEl).text())
+    $('#pcInput' + pcInputNum).val(character)
     if(pcInputNum == 6)
         setTimeout(processPairCode)
 }
@@ -307,7 +273,8 @@ function pcInputPaste(e, offset) {
         setTimeout(processPairCode)
 }
 
-function pcInputText(inputEl) {
+function pcInputText(e) {
+    const inputEl = e.currentTarget
     inputEl.value = inputEl.value.toUpperCase()
     if(inputEl.value != '')
         setTimeout(gotoNextPCInput)
@@ -320,5 +287,3 @@ function gotoNextPCInput() {
         if(getPCInput().length == pcLength)
             setTimeout(processPairCode)
 }
-
-init();
