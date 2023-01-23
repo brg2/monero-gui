@@ -1,4 +1,4 @@
-#app {
+body {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -6,6 +6,10 @@
     position: absolute;
     padding-top: 10px;
     align-items: center;
+}
+
+body.loaded {
+    transition: background ease 0.5s;
 }
 
 .form-control {
@@ -17,16 +21,17 @@ body.dark {
     color: white;
 }
 
-#controls {
+#app {
     display: flex;
     flex-direction: column;
     margin: 0 auto;
     align-items: center;
     flex-grow: 0;
-    width: 300px;
+    width: 320px;
+    transition: filter ease 0.5s;
 }
 
-#controls input:not(#password) {
+#app input:not(#password) {
     /* width: 270px; */
 }
 
@@ -35,10 +40,16 @@ button {
     align-items: center;
 }
 
-#controls .input-group button {
+#app .input-group button.x-clear {
+    width: 30px;
+}
+
+#app .input-group button {
     border-color: #9b9b9b !important;
     fill: #6c757d;
-    width: 45px;
+    width: 40px;
+    justify-content: center;
+    padding: 0px;
     transition: fill .15s ease-in-out, 
         color .15s ease-in-out, 
         background-color .15s ease-in-out, 
@@ -46,15 +57,16 @@ button {
         box-shadow .15s ease-in-out;
 }
 
-#controls .input-group button:hover {
+#app .input-group button:hover {
     fill: white;
 }
 
 body.dark #controls .input-group button {
     fill: #898989;
     color: #898989 !important;
-    width: 45px;
 }
+
+
 
 body.dark #controls .input-group button:hover {
     fill: white;
@@ -105,17 +117,21 @@ body.dark .form-control::placeholder {
 }
 
 #qrcode {
+    width: 320px;
+    height: 320px;
     margin-top: 20px;
     cursor: pointer;
+    transition: filter ease 0.5s;
 }
 
 #qrcode > svg {
     border-radius: .5rem;
-    transition: filter ease 0.5s;
 }
 
-#qrcode.blur > svg {
-    filter: blur(250px);
+.blur {
+    filter: blur(250px) opacity(0);
+    pointer-events: none;
+    
 
     /* Hack for safari */
     -webkit-backface-visibility: hidden;
@@ -161,21 +177,21 @@ body.dark .form-control::placeholder {
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
-/* Pairing Code Input Pad */
-#pcInputContainer {
-    width: 300px;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
+#disconnected {
+    position: absolute;
+    top: 50%;
+    color: rgb(133, 133, 133);
 }
 
-#pcInputPad {
+/* Pairing Code Input Pad */
+
+#pairingEntryPad {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
 }
 
-.pc-input-pad {
+.pairing-input-pad {
     width: 50px;
     height: 40px;
     cursor: pointer;
@@ -185,24 +201,24 @@ body.dark .form-control::placeholder {
     font-size: 30px;
 }
 
-.pc-input-pad:hover {
+.pairing-input-pad:hover {
     background-color: #f1f1f1;
 }
 
-body.dark .pc-input-pad:hover {
+body.dark .pairing-input-pad:hover {
     background-color: #3b3b3b;
 }
 
-#pcInputFields {
+#pairingFields {
     margin-bottom: 20px;
 }
 
-.pc-input {
+.pairing-input {
     padding: 10px;
     text-align: center;
 }
 
-#pcInputTitle {
+#pairingTitle {
     font-size: 24px;
     margin-bottom: 10px;
 }

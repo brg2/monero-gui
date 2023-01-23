@@ -27,6 +27,7 @@ let encrypted = window.location.hash.split('#')[1],
     retrying = false,
     pcLength = 6,
     qrcode = ''
+    walletName = ''
 
 function init() {
     if(!isRecover)
@@ -117,9 +118,11 @@ function postAPI(payload) {
             // Show qr code of self address
             if (jsonResponse.self && selfaddress != jsonResponse.self || !connected) {
                 selfaddress = jsonResponse.self
-                qrcode = new QRCode({content: selfaddress, width: 300, height: 300, padding: 3}).svg()
-                if (jsonResponse.name)
-                    document.title = jsonResponse.name + " (" + selfaddress.slice(0, 4) + "..." + selfaddress.slice(-4) + ")"
+                qrcode = new QRCode({content: selfaddress, width: 320, height: 320, padding: 3}).svg()
+                if (jsonResponse.name) {
+                    walletName = jsonResponse.name
+                    document.title = walletName + " (" + selfaddress.slice(0, 4) + "..." + selfaddress.slice(-4) + ")"
+                }
             }
             
             if(blackTheme)
@@ -151,7 +154,13 @@ function postAPI(payload) {
 
             pingTimeout = setTimeout(postAPI, 3000)
         },
-        error: errHandler
+        error: errHandler,
+        complete() {
+            setTimeout(() => {
+                if(!$('body').hasClass('loaded'))
+                    $('body').addClass('loaded')
+            }, 10)
+        }
     })
 }
 
@@ -170,12 +179,14 @@ function errHandler(e) {
         if(!retrying) {
             retrying = true;
             app.data.retrying = true;
-            document.title = "Disconnected"
+            document.title = `${walletName} (Disconnected)`
         }
         pingTimeout = setTimeout(postAPI, 3000)
     }
 
-    connected = false;
+    if(connected) {
+        app.data.connected = connected = false
+    }
 }
 
 function postAPIInputs() {
@@ -202,6 +213,14 @@ function clearInputs() {
     $("#password").val("");
 }
 
+function clearAddress() {
+    $("#address").val("");
+}
+
+function clearAmount() {
+    $("#amount").val("");
+}
+
 function scanQR() {
     window.location = "https://brg2.github.io/qrscan#" + encodeURIComponent(window.location.href);
 }
@@ -217,11 +236,11 @@ function useBalance() {
 }
 
 function showSelfQR() {
-    $('#qrcode').removeClass('blur')
+    app.data.showSelfQR = true
 }
 
 function hideSelfQR() {
-    $('#qrcode').addClass('blur')
+    app.data.showSelfQR = false
 }
 
 function pcInputEnter(character) {

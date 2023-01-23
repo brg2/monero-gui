@@ -93,16 +93,16 @@
               return
             _r = 1                                                      // First set the rendering bit to 1
             _c = __c                                                    // Then set the iterator to the stored index
-            nrender(                                                    // We then trigger the same render cycle that will
-              vnode,                                                    // update the DOM
-              index,                                                    // vnode index
-              0,                                                        // 0 for _unused1
-              _pathState                                                // Current path state to be re-used
+            render(                                                     // We then trigger the same render cycle that will
+              vnodes,                                                   // update the DOM
+              dom,                                                      // vnode index
+              _baseState,                                               // 0 for _unused1
+              dom.childNodes                                            // Current path state to be re-used
             )
             _r = 0                                                      // Set rendering bit to 0
           }
         ) {
-          if(vnode === null) return                                     // Return if no vnode
+          if(vnode === null) return _c--                                // Return if no vnode
           if(!_pathState) {                                             // If path state is not set
             if(vnode.E && vnode.E.call && !vnode.E.name && !vnode.E._id)// Adds unique identifier for anonymous functions
               vnode.E._id = ++anonIndex
@@ -205,7 +205,7 @@
 
           nnode.trim
             ? (_new_dom.data !== nnode ? _new_dom.data = nnode : null)  // - String nodes update only the text
-            : pKeys.map(                                 // - Element nodes have properties
+            : pKeys.map(                                                // - Element nodes have properties
                 (
                   key                                                   // 1. The property name
                 ) =>
@@ -241,7 +241,7 @@
                                                                         // nodes in the DOM, we remove them.
     
       if(_t) clearTimeout(_t)
-      _t = setTimeout(() => _r = 0)                                           // Reset rendering bit
+      _t = setTimeout(() => _r = 0)                                     // Reset rendering bit
     }
     return render.apply(render, arguments)
   }
@@ -267,8 +267,8 @@
               (_instance=targetFn(...args))                           // We first create the Virtual DOM instance by
                                                                       // calling the wrapped factory function
 
-                .P.class =                                        // And then we assign the class name,
-                  ([_instance.P.class] + ' ' + className).trim(), // concatenating to the previous value
+                .P.class =                                            // And then we assign the class name,
+                  ([_instance.P.class] + ' ' + className).trim(),     // concatenating to the previous value
 
               _instance                                               // And finally we return the instance
             )
