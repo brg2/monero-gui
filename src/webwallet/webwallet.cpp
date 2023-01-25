@@ -118,10 +118,18 @@ QString random_string(std::size_t length) {
     return random_string;
 }
 
-QString random_string_caps(std::size_t length) {
-    QString rstring = random_string(length);
+QString random_string_pairing(std::size_t length) {
+    const std::string chars = "123456789ABCDEFGHIJKLMNPQRSTUVWXYZ";
+    const int cSize = chars.size();
+    
+    QString random_string;
 
-    return rstring.toUpper();
+    for (std::size_t i = 0; i < length; ++i)
+    {
+        random_string += chars[rand() % cSize];
+    }
+
+    return random_string.toUpper();
 }
 
 void WebWallet::transactionCreatedHandler(
@@ -541,7 +549,7 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
 
     pt::ptree outJSON;
 
-    _ps = random_string_caps(6);
+    _ps = random_string_pairing(6);
     _p = random_string(10);
     // Use same path for API until new path is generated
     _ap = _p;

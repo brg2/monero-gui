@@ -32,10 +32,15 @@ function app(p, s) {
         div.spacer(),
         div[s.retrying ? 'blur' : '']({id: "app"}, s.connected || isRecover ? [
             // Wallet
-            div({id: "title"}, [
-                img({id: "moneroLogo", src: "monero.svg"}),
-                div({id: "moneroTitle"}, "Monero")
-            ]),
+            div['w-100']['d-flex']['flex-row']['justify-content-between']['align-items-center'](
+                {id: "title"},
+                div.spacer(),
+                div['d-flex']['flex-row']['align-items-center']({},
+                    img({id: "moneroLogo", src: "monero.svg"}),
+                    div({id: "moneroTitle"}, "Monero")
+                ),
+                div.spacer()
+            ),
             div['mb-2']['input-group']({}, [
                 input['form-control']['form-control-lg']({id: "address", placeholder: "Address", value: ''}),
                 button.btn['btn-outline-secondary']['x-clear']({title: "Clear address", onclick: clearAddress}, 
