@@ -26,8 +26,9 @@ let encrypted = window.location.hash.split('#')[1],
     balance,
     retrying = false,
     pcLength = 6,
-    qrcode = ''
-    walletName = ''
+    qrcode = '',
+    walletName = '',
+    paused = false
 
 function init() {
     if(!isRecover)
@@ -82,6 +83,9 @@ function postAPI(payload) {
     // Clear any calls of this method to avoid duplicates
     if(pingTimeout) 
         pingTimeout = clearTimeout(pingTimeout)
+
+    if(paused)
+        return pingTimeout = setTimeout(postAPI, 3000)
 
     $.ajax({
         url: _p,
@@ -305,4 +309,11 @@ function gotoNextPCInput() {
     else
         if(getPCInput().length == pcLength)
             setTimeout(processPairCode)
+}
+
+function pauseConnection(s) {
+    paused = s.paused = !s.paused
+    if(!paused) {
+        postAPI()
+    }
 }

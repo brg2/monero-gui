@@ -223,3 +223,12 @@ body.dark .pairing-input-pad:hover {
     margin-bottom: 10px;
 }
 /* End Pairing Code Input Pad */
+
+#toggleSelfQRButton {
+    fill: white;
+}
+
+#togglePauseResume {
+    stroke: white;
+    fill: white;
+}

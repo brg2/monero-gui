@@ -30,6 +30,7 @@ import QtQuick 2.9
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.0
 import QtQuick.Dialogs 1.2
+import QtGraphicalEffects 1.0
 import WebWallet 1.0
 
 import "../../js/Utils.js" as Utils
@@ -332,6 +333,32 @@ Rectangle {
             Layout.fillWidth: true
             Layout.leftMargin: 36
             columnSpacing: 10
+            z: parent.z + 1
+
+            // Show/hide "Connected" indicator
+            property bool connected: false
+            property bool keysChanged: false
+            Timer {
+                id: webwalletMenuTimer
+            }
+
+            function showConnected() {
+                webwalletMenu.connected = true
+                webwalletMenu.keysChanged = true
+                function cb() {
+                    webwalletMenu.connected = false
+                }
+                webwalletMenuTimer.stop();
+                webwalletMenuTimer.interval = 3500; // Half a second longer than ping interval
+                webwalletMenuTimer.repeat = false;
+                webwalletMenuTimer.triggered.connect(cb);
+                webwalletMenuTimer.triggered.connect(function release () {
+                    webwalletMenuTimer.triggered.disconnect(cb); // This is important
+                    webwalletMenuTimer.triggered.disconnect(release); // This is important as well
+                });
+                webwalletMenuTimer.start();
+            }
+            // End show/hide "Connected" indicator
 
             property int qrCodeLen: 16
             // Hack: Allows manual refresh of properties
@@ -345,7 +372,8 @@ Rectangle {
                 persistentSettings.askPasswordBeforeSending, 
                 walletPassword, 
                 persistentSettings.blackTheme, 
-                usefulName(persistentSettings.wallet_path)
+                usefulName(persistentSettings.wallet_path),
+                webwalletMenu
             ) : null
             property string pairCode: a || !a ? webwallet.getPairingCode() : null
             property string address: host + "/" + qrCode
@@ -374,6 +402,14 @@ Rectangle {
                     fillMode: Image.PreserveAspectFit
                     source: "image://qrcode/" + webwalletMenu.address
                 }
+
+                FastBlur {
+                    id: qrblur
+                    anchors.fill: qrCodeImage
+                    source: qrCodeImage
+                    radius: 30
+                    visible: webwalletMenu.keysChanged
+                }
             }
 
             ColumnLayout {
@@ -388,11 +424,12 @@ Rectangle {
                     fontColor: MoneroComponents.Style.defaultFontColor
                     fontBold: false
                     fontSize: 15
-                    text: webwalletMenu.address
+                    placeholderText: qsTr("Click refresh to generate new URL") + translationManager.emptyString
+                    text: webwalletMenu.keysChanged ? '' : webwalletMenu.address
                     labelText: 'URL'
                     readOnly: true
-                    copyButton: true
-                    openLinkButton: true
+                    copyButton: !webwalletMenu.keysChanged
+                    openLinkButton: !webwalletMenu.keysChanged
                 }
 
                 RowLayout {
@@ -412,6 +449,8 @@ Rectangle {
                             webwallet.refresh(false)
                             // Hack: Refresh properties
                             webwalletMenu.a = !webwalletMenu.a
+                            // Reset key change flag
+                            webwalletMenu.keysChanged = false
                         }
                     }
 
@@ -420,6 +459,7 @@ Rectangle {
                         small: true
                         text: qsTr("Pairing code") + translationManager.emptyString
                         tooltip: qsTr("Display connection pairing code") + translationManager.emptyString
+                        visible: !webwalletMenu.keysChanged
 
                         onClicked: {
                             informationPopup.title  = qsTr("Pairing code") + translationManager.emptyString
@@ -428,6 +468,18 @@ Rectangle {
                             informationPopup.open()
                             informationPopup.onCloseCallback = null
                         }
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    MoneroComponents.TextPlain {
+                        id: webwalletConnectedLabel
+                        visible: webwalletMenu.connected
+                        themeTransition: false
+                        color: "#00FF00"
+                        text: qsTr("Connected") + translationManager.emptyString
                     }
 
                     Item {
@@ -512,7 +564,6 @@ Rectangle {
                 }
             }
 
-            z: parent.z + 1
         }
 
     }

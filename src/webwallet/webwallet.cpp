@@ -77,6 +77,9 @@ int portNumberRangeStart = 56700;
 int portNumberRange = 101;
 int portNumber = rand() % portNumberRange + portNumberRangeStart;
 
+//Reference to web wallet menu
+QObject * webwalletMenu;
+
 // pairing string
 QString WebWallet::_ps = "";
 // P - path key
@@ -341,6 +344,11 @@ Q_INVOKABLE void WebWallet::start() {
 
                 /* End Set Current Parameters */
 
+                // Update UI
+                if(webwalletMenu != NULL) {
+                    QMetaObject::invokeMethod(webwalletMenu, "showConnected", Qt::QueuedConnection);
+                }
+
             } else {
                 // qCritical() << "Key doesn't match" << QString::fromStdString(_jk) << "!=" << _k.toBase64();
                 return;
@@ -559,7 +567,7 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
 
     // Debugging information
     //string estrJSON = encryption.encode(QString::fromStdString(strJSON).toUtf8(), _k, _ivps).toBase64().toStdString();
-    qCritical() << "PS - Pairing string: " << _ps << Qt::endl;
+    // qCritical() << "PS - Pairing string: " << _ps << Qt::endl;
     // qCritical() << "P - Path: " << _p << Qt::endl;
     // qCritical() << "K - key: " << _k.toHex() << Qt::endl;
     // qCritical() << "IV - iv: " << _iv.toHex() << Qt::endl;
@@ -574,10 +582,12 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
     return;
 }
 
-Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName) {
+Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName, QObject *wwMenu) {
     if (useWallet != NULL) {
         currentWallet = useWallet;
     }
+    //qCritical() << "webwallet menu columns: " << QQmlProperty::read(webwalletMenu, "columns").toInt();
+    webwalletMenu = wwMenu;
 
     requirePassword = passwordRequired;
     wPassword = walletPassword;
@@ -589,6 +599,7 @@ Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QS
     if (_p == "") {
         WebWallet::refresh(true);
     }
+
 
     QByteArray _ivps = QCryptographicHash::hash((_iv.toHex() + _ps).toUtf8(), QCryptographicHash::Md5);
     QByteArray encodeText = encryption.encode(_ps.toLocal8Bit(), _k, _ivps);
