@@ -349,7 +349,7 @@ Rectangle {
                     webwalletMenu.connected = false
                 }
                 webwalletMenuTimer.stop();
-                webwalletMenuTimer.interval = 3500; // Half a second longer than ping interval
+                webwalletMenuTimer.interval = 5000;
                 webwalletMenuTimer.repeat = false;
                 webwalletMenuTimer.triggered.connect(cb);
                 webwalletMenuTimer.triggered.connect(function release () {
