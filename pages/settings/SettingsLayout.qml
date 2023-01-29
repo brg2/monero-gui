@@ -446,11 +446,7 @@ Rectangle {
                             // Focus onto address (if ports are still focused)
                             webwalletAddress.forceActiveFocus();
                             // Regenerate keys
-                            webwallet.refresh(false)
-                            // Hack: Refresh properties
-                            webwalletMenu.a = !webwalletMenu.a
-                            // Reset key change flag
-                            webwalletMenu.keysChanged = false
+                            webwallet.refresh()
                         }
                     }
 

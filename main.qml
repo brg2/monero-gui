@@ -309,7 +309,7 @@ ApplicationWindow {
         middlePanel.getProofClicked.disconnect(handleGetProof);
         middlePanel.checkProofClicked.disconnect(handleCheckProof);
 
-        // Stop remote control
+        // Stop web wallet
         appWindow.walletName = "";
         currentWallet = undefined;
 
@@ -324,7 +324,8 @@ ApplicationWindow {
             hideProcessingSplash();
         }
 
-        // Stop remote control
+        // Stop web wallet (do refresh before so keys aren't reused on restart)
+        webwallet.refresh();
         webwallet.stop();
     }
 

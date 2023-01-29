@@ -144,13 +144,12 @@ void WebWallet::transactionCreatedHandler(
 }
 
 Q_INVOKABLE void WebWallet::start() {
-
-    qInfo() << "Web wallet: Starting";
-
     if (started) {
         return;
     }
     
+    qInfo() << "Web wallet: Starting";
+
     server.config.port = portNumber;
     
     // API end point
@@ -573,6 +572,13 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
 
     QString decodedString = QString(encryption.removePadding(decodeBytes));
 
+    if(webwalletMenu) {
+        // Reset key change flag
+        webwalletMenu->setProperty("keysChanged", false);
+        // Hack: Refresh properties
+        webwalletMenu->setProperty("a", !webwalletMenu->property("a").toBool());
+    }
+
     // Debugging information
     //string estrJSON = encryption.encode(QString::fromStdString(strJSON).toUtf8(), _k, _ivps).toBase64().toStdString();
     // qCritical() << "PS - Pairing string: " << _ps << Qt::endl;
@@ -594,7 +600,7 @@ Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QS
     if (useWallet != NULL) {
         currentWallet = useWallet;
     }
-    //qCritical() << "webwallet menu columns: " << QQmlProperty::read(webwalletMenu, "columns").toInt();
+    //qCritical() << "Web wallet running";
     webwalletMenu = wwMenu;
 
     requirePassword = passwordRequired;
