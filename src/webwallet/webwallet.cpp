@@ -75,7 +75,14 @@ QString wName = "";
 
 int portNumberRangeStart = 56700;
 int portNumberRange = 101;
-int portNumber = rand() % portNumberRange + portNumberRangeStart;
+
+//Random generator
+std::random_device rd;
+std::mt19937 rng(rd());
+std::uniform_int_distribution<int> randPort(portNumberRangeStart, portNumberRangeStart + portNumberRange);
+
+// int portNumber = rand() % portNumberRange + portNumberRangeStart;
+int portNumber = randPort(rng);
 
 //Reference to web wallet menu
 QObject * webwalletMenu;
@@ -107,12 +114,14 @@ QByteArray WebWallet::_liv = "";
 QString random_string(std::size_t length) {
     const std::string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     const int cSize = chars.size();
+
+    std::uniform_int_distribution<> randString(0, cSize - 1);
     
     QString random_string;
 
     for (std::size_t i = 0; i < length; ++i)
     {
-        random_string += chars[rand() % cSize];
+        random_string += chars[randString(rng)];
     }
 
     return random_string;
@@ -121,12 +130,13 @@ QString random_string(std::size_t length) {
 QString random_string_pairing(std::size_t length) {
     const std::string chars = "123456789ABCDEFGHIJKLMNPQRSTUVWXYZ";
     const int cSize = chars.size();
+    std::uniform_int_distribution<> randString(0, cSize - 1);
     
     QString random_string;
 
     for (std::size_t i = 0; i < length; ++i)
     {
-        random_string += chars[rand() % cSize];
+        random_string += chars[randString(rng)];
     }
 
     return random_string.toUpper();
@@ -528,7 +538,7 @@ Q_INVOKABLE int WebWallet::getPort(int portStart, int portEnd) {
     // qCritical() << "Server port:" << portNumber;
 
     if(portNumber < portStart || portNumber > portEnd) {
-        portNumber = rand() % portNumberRange + portNumberRangeStart;
+        portNumber = randPort(rng);
         // Restart web wallet server to take new port number
         WebWallet::stop();
         WebWallet::start();
@@ -538,7 +548,7 @@ Q_INVOKABLE int WebWallet::getPort(int portStart, int portEnd) {
 
 Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
     if(!notPortNumber) {
-        portNumber = rand() % portNumberRange + portNumberRangeStart;
+        portNumber = randPort(rng);
         // Restart web wallet server to take new port number
         WebWallet::stop();
         WebWallet::start();
