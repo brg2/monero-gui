@@ -458,11 +458,7 @@ Rectangle {
                         visible: !webwalletMenu.keysChanged
 
                         onClicked: {
-                            informationPopup.title  = qsTr("Pairing code") + translationManager.emptyString
-                            informationPopup.text = qsTr(webwalletMenu.pairCode)
-                            informationPopup.icon = StandardIcon.Information
-                            informationPopup.open()
-                            informationPopup.onCloseCallback = null
+                            webwalletPairingCode.open(webwalletMenu.pairCode)
                         }
                     }
 

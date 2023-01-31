@@ -30,7 +30,7 @@ function app(p, s) {
 
     return [
         div.spacer(),
-        div[s.retrying ? 'blur' : '']({id: "app"}, s.connected || isRecover ? [
+        div[s.retrying ? 'blur' : '']({id: "app"}, s.connected || isRecover || s.retrying ? [
             // Wallet
             div['w-100']['d-flex']['flex-row']['justify-content-between']['align-items-center'](
                 {id: "title"},
@@ -74,7 +74,7 @@ function app(p, s) {
             div[s.showSelfQR ? '' : 'blur']({id: 'qrcode', onclick: () => selectSelfAddress('selfaddress'), innerHTML: qrcode})
         ] : [
             // Pairing
-            div({id: "pairingTitle"}, "Enter Pairing Code"),
+            div({id: "pairingTitle"}, "Enter pairing code"),
             div['input-group']({id: "pairingFields"},
                 Array.from({length: pcLength}, (n, i) => 
                     input['form-control']['form-control-lg']['pairing-input']({

@@ -87,6 +87,9 @@ int portNumber = randPort(rng);
 //Reference to web wallet menu
 QObject * webwalletMenu;
 
+// AES Encryption engine
+QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::CBC, QAESEncryption::Padding::PKCS7);
+
 // pairing string
 QString WebWallet::_ps = "";
 // P - path key
@@ -178,8 +181,6 @@ Q_INVOKABLE void WebWallet::start() {
                 << "Content-Length: 0\r\n\r\n";
             return;
         }
-
-        QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::CBC, QAESEncryption::Padding::PKCS7);
 
         QByteArray decodeBytes = "";
         QByteArray _ivps = "";
@@ -554,8 +555,6 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
         WebWallet::start();
     }
 
-    QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::CBC, QAESEncryption::Padding::PKCS7);
-
     pt::ptree outJSON;
 
     _ps = random_string_pairing(6);
@@ -618,7 +617,6 @@ Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QS
     blackTheme = isBlackTheme;
     wName = walletName;
 
-    QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::CBC, QAESEncryption::Padding::PKCS7);
 
     if (_p == "") {
         WebWallet::refresh(true);

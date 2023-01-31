@@ -1884,7 +1884,7 @@ ApplicationWindow {
             radius: 64
             visible: passwordDialog.visible || inputDialog.visible || splash.visible || updateDialog.visible ||
                 devicePassphraseDialog.visible || txConfirmationPopup.visible || successfulTxPopup.visible ||
-                remoteNodeDialog.visible
+                remoteNodeDialog.visible || webwalletPairingCode.visible
         }
 
 
@@ -2421,5 +2421,12 @@ ApplicationWindow {
 
     WebWallet { 
         id: webwallet 
+    }
+
+    WebWalletPairingCode {
+        id: webwalletPairingCode
+        visible: false
+        z: parent.z + 2
+        anchors.fill: parent
     }
 }

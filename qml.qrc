@@ -283,5 +283,6 @@
         <file>images/trezor.png</file>
         <file>images/trezor@2x.png</file>
         <file>qtquickcontrols2.conf</file>
+        <file>components/WebWalletPairingCode.qml</file>
     </qresource>
 </RCC>
