@@ -458,7 +458,9 @@ Rectangle {
                         visible: !webwalletMenu.keysChanged
 
                         onClicked: {
-                            webwalletPairingCode.open(webwalletMenu.pairCode)
+                            webwalletPairingCode.open(
+                                webwalletMenu.pairCode.substring(0,3) + '  ' + webwalletMenu.pairCode.substring(3)
+                            )
                         }
                     }
 

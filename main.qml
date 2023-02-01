@@ -2426,7 +2426,7 @@ ApplicationWindow {
     WebWalletPairingCode {
         id: webwalletPairingCode
         visible: false
-        z: parent.z + 2
+        z: parent.z + 1
         anchors.fill: parent
     }
 }

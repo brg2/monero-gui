@@ -76,23 +76,28 @@ function app(p, s) {
             // Pairing
             div({id: "pairingTitle"}, "Enter pairing code"),
             div['input-group']({id: "pairingFields"},
-                Array.from({length: pcLength}, (n, i) => 
-                    input['form-control']['form-control-lg']['pairing-input']({
-                        id: `pcInput${i+1}`,
+                // Input fields
+                ...Array.from({length: pcLength + 1}, (n, i) => 
+                    i == Math.ceil(pcLength / 2) ? span['input-group-text']() : input['form-control']['form-control-lg']['pairing-input']({
+                        id: `pcInput${i < Math.ceil(pcLength / 2) ? i + 1 : i}`,
                         maxlength: 1,
                         onpaste: (e) => pcInputPaste(e, i),
                         oninput: (e) => pcInputText(e),
                         value: ''
                     })
-                ).concat([
-                    button.btn['btn-outline-secondary']({onclick: clearPairingCode}, "×")
-                ])
+                ),
+                button.btn['btn-outline-secondary']({onclick: clearPairingCode}, "×")
             ),
             div({id: 'pairingEntryPad'},
-                'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('').map(l => 
-                    div.noselect['pairing-input-pad']({
-                        onclick: () => pcInputEnter(l)
-                    }, l)
+                // Key pad
+                ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].map(line => 
+                    div['pairing-pad-line']({}, 
+                        line.split('').map(l => 
+                            div.noselect['pairing-input-pad']({
+                                onclick: () => pcInputEnter(l.trim())
+                            }, l)
+                        )
+                    )
                 )
             )
         ]),

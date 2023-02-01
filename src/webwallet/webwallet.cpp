@@ -334,7 +334,7 @@ Q_INVOKABLE void WebWallet::start() {
                 outJSON.put("p", _nap.toStdString());
                 outJSON.put("bal", currentWallet == NULL ? "" : std::to_string(currentWallet->balance()));
                 outJSON.put("rp", requirePassword ? 1 : 0);
-                outJSON.put("self", currentWallet == NULL ? "" : currentWallet->address(0, 0).toStdString());
+                outJSON.put("self", currentWallet == NULL ? "" : currentWallet->address(currentWallet->currentSubaddressAccount(), 0).toStdString());
                 outJSON.put("bt", blackTheme ? 1 : 0);
                 outJSON.put("name", wName.toStdString());
 

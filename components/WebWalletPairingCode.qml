@@ -44,22 +44,13 @@ Item {
 
     property string pairingCode
 
-    function _openInit() {
-        root.visible = true;
-    }
-
     function open(pc) {
         pairingCode = pc;
-        root.visible = true;
-        _openInit();
+        visible = true;
     }
 
     function close() {
-        root.visible = false;
-    }
-
-    function onOk() {
-        root.close()
+        visible = false;
     }
 
     ColumnLayout {
@@ -94,7 +85,7 @@ Item {
                 color: MoneroComponents.Style.defaultFontColor
             }
 
-            // Ok/Cancel buttons
+            // Ok button
             RowLayout {
                 id: buttons
                 spacing: 16
@@ -103,12 +94,9 @@ Item {
 
                 MoneroComponents.StandardButton {
                     id: okButton
-                    fontAwesomeIcon: true
-                    rightIcon: okButtonIcon
                     small: true
                     text: qsTr("Ok") + translationManager.emptyString
-                    KeyNavigation.tab: cancelButton
-                    onClicked: onOk()
+                    onClicked: close()
                 }
             }
         }

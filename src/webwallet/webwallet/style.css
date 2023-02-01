@@ -189,13 +189,14 @@ body.dark .form-control::placeholder {
 }
 
 .pairing-input-pad {
-    width: 50px;
+    width: 35px;
     height: 40px;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 30px;
+    border-radius: 5px;
 }
 
 .pairing-input-pad:hover {
@@ -218,6 +219,12 @@ body.dark .pairing-input-pad:hover {
 #pairingTitle {
     font-size: 24px;
     margin-bottom: 10px;
+}
+
+.pairing-pad-line {
+    display: flex;
+    width: 100%;
+    justify-content: center;
 }
 /* End Pairing Code Input Pad */
 
