@@ -55,21 +55,27 @@ function init() {
 }
 
 function processPairCode() {
-    _ps = getPCInput()
-    
-    _k = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_ps)),
-    _iv = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_ps)),
-    _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_iv.toString() + _ps))
-    options.iv = _ivps
-    _jps = CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8),
-    _jk = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps))
-    _p = window.location.origin + window.location.pathname
-
-    if(_ps == '' || _jk.toString() != _k.toString()) {
+    function fail() {
         alert("Incorrect pairing code. Please try again.")
         clearPairingCode()
-    } else {
-        postAPI()
+    }
+    try {
+        _ps = getPCInput()
+        _k = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_ps)),
+        _iv = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_ps)),
+        _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_iv.toString() + _ps))
+        options.iv = _ivps
+        _jps = CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8),
+        _jk = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps))
+        _p = window.location.origin + window.location.pathname
+
+        if(_ps == '' || _jk.toString() != _k.toString()) {
+            fail()
+        } else {
+            postAPI()
+        }
+    } catch(e) {
+        fail()
     }
 }
 
