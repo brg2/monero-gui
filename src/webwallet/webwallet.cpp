@@ -625,7 +625,7 @@ Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QS
 
     QByteArray _ivps = QCryptographicHash::hash((_iv.toHex() + _ps).toUtf8(), QCryptographicHash::Md5);
     QByteArray encodeText = encryption.encode(_ps.toLocal8Bit(), _k, _ivps);
-    return _p + "/#" + QString(encodeText.toBase64());
+    return _p + "/#" + (isBlackTheme ? "1" : "0") + QString(encodeText.toBase64());
 
 }
 

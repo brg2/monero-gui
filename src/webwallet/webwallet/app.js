@@ -4,7 +4,7 @@ const formatter = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 12,
 })
 
-let encrypted = window.location.hash.split('#')[1],
+let encrypted = window.location.hash.split('#')[1].substring(1),
     isRecover = encrypted.slice(0,1) == '?',
     context = isRecover ? JSON.parse(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Base64.parse(encrypted.split('?')[1]))) : '',
     _ps,
@@ -12,7 +12,11 @@ let encrypted = window.location.hash.split('#')[1],
     _iv,
     _ivps,
     _p,
-    options = {},
+    options = {
+        mode: CryptoJS.mode.CBC,
+        iv: _ivps,
+        padding: CryptoJS.pad.Pkcs7
+    },
     _jps,
     _jk,
     _address = isRecover && context.address ? context.address : "",
@@ -21,7 +25,7 @@ let encrypted = window.location.hash.split('#')[1],
     reqPassword,
     connected = false,
     selfaddress = "",
-    blackTheme,
+    blackTheme = isRecover ? null : window.location.hash.substring(1,2) == "1",
     currentStatus,
     balance,
     retrying = false,
@@ -31,18 +35,16 @@ let encrypted = window.location.hash.split('#')[1],
     paused = false
 
 function init() {
+    syncBlackTheme()
+
     if(!isRecover)
         return clearPairingCode()
     _ps = context.ps
     _k = CryptoJS.enc.Hex.parse(context.k)
     _iv = CryptoJS.enc.Hex.parse(context.iv)
     _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_iv.toString() + _ps))
+    options.iv = _ivps
     _p = window.location.origin + (isRecover ? ('/' + context.p) : window.location.pathname)
-    options = {
-        mode: CryptoJS.mode.CBC,
-        iv: _ivps,
-        padding: CryptoJS.pad.Pkcs7
-    }
     _jps = isRecover ? context.ps : CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8)
     _jk = isRecover ? context.k : CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps))
 
@@ -134,11 +136,8 @@ function postAPI(payload) {
                     document.title = walletName + " (" + selfaddress.slice(0, 4) + "..." + selfaddress.slice(-4) + ")"
                 }
             }
-            
-            if(blackTheme)
-                $(document.body).addClass('dark')
-            else
-                $(document.body).removeClass('dark')
+
+            syncBlackTheme()
 
             options.iv = _ivps
 
@@ -322,4 +321,11 @@ function pauseConnection(s) {
     if(!paused) {
         postAPI()
     }
+}
+
+function syncBlackTheme() {
+    if(blackTheme)
+        $(document.body).addClass('dark')
+    else
+        $(document.body).removeClass('dark')
 }

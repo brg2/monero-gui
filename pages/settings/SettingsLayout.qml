@@ -459,7 +459,7 @@ Rectangle {
 
                         onClicked: {
                             webwalletPairingCode.open(
-                                webwalletMenu.pairCode.substring(0,3) + '  ' + webwalletMenu.pairCode.substring(3)
+                                webwalletMenu.pairCode
                             )
                         }
                     }

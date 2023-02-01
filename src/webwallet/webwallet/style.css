@@ -226,6 +226,10 @@ body.dark .pairing-input-pad:hover {
     width: 100%;
     justify-content: center;
 }
+
+body.dark .input-group-text {
+    background-color: #3b3b3b;
+}
 /* End Pairing Code Input Pad */
 
 #toggleSelfQRButton {

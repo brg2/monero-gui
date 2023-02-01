@@ -38,11 +38,15 @@ import "." as MoneroComponents
 import "effects/" as MoneroEffects
 import "../js/Utils.js" as Utils
 
+import moneroComponents.Clipboard 1.0
+
 Item {
     id: root
     visible: false
 
     property string pairingCode
+    
+    Clipboard { id: clipboard }
 
     function open(pc) {
         pairingCode = pc;
@@ -76,13 +80,21 @@ Item {
             }
 
             Label {
-                text: pairingCode
+                text: pairingCode.substring(0,3) + '  ' + pairingCode.substring(3)
                 Layout.fillWidth: true
 
                 font.pixelSize: 42
                 font.family: MoneroComponents.Style.fontLight.name
 
                 color: MoneroComponents.Style.defaultFontColor
+                
+                MouseArea {
+                    anchors.fill: parent
+                    onDoubleClicked: {
+                        clipboard.setText(pairingCode)
+                        appWindow.showStatusMessage(qsTr("Pairing code copied to clipboard"),3)
+                    }
+                }
             }
 
             // Ok button
