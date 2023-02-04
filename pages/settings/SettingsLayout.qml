@@ -447,6 +447,8 @@ Rectangle {
                             webwalletAddress.forceActiveFocus();
                             // Regenerate keys
                             webwallet.refresh()
+                            // Redraw web wallet QML
+                            webwalletMenu.a = !webwalletMenu.a
                         }
                     }
 

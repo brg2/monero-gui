@@ -56,39 +56,36 @@ using HttpServer = SimpleWeb::Server<SimpleWeb::HTTP>;
 using HttpsClient = SimpleWeb::Client<SimpleWeb::HTTPS>;
 namespace pt = boost::property_tree;
 
+// Random number pieces
+std::random_device WebWallet::rd;
+std::mt19937 WebWallet::rng(rd());
+
+// Reference to menu QML
+QObject * WebWallet::webwalletMenu;
+
+// HTTP Server for POST/GET requests to
 HttpServer WebWallet::server;
 thread WebWallet::server_thread;
-bool WebWallet::started = false;
-QString WebWallet::strIP = "";
+Wallet * WebWallet::currentWallet;
 
-Wallet * currentWallet;
+QAESEncryption WebWallet::encryption(QAESEncryption::AES_256, QAESEncryption::CBC, QAESEncryption::Padding::PKCS7);
 
-bool requirePassword = true;
-
+// Various flags
+bool WebWallet::started;
+bool WebWallet::starting;
+bool WebWallet::requirePassword = true;
 bool WebWallet::useLast = true;
+bool WebWallet::blackTheme;
 
-QString wPassword = "";
+// Port number range and their defaults
+int WebWallet::portNumberRangeStart = 56700;
+int WebWallet::portNumberRange = 101;
+int WebWallet::portNumber;
 
-bool blackTheme = false;
-
-QString wName = "";
-
-int portNumberRangeStart = 56700;
-int portNumberRange = 101;
-
-//Random generator
-std::random_device rd;
-std::mt19937 rng(rd());
-std::uniform_int_distribution<int> randPort(portNumberRangeStart, portNumberRangeStart + portNumberRange);
-
-// int portNumber = rand() % portNumberRange + portNumberRangeStart;
-int portNumber = randPort(rng);
-
-//Reference to web wallet menu
-QObject * webwalletMenu;
-
-// AES Encryption engine
-QAESEncryption encryption(QAESEncryption::AES_256, QAESEncryption::CBC, QAESEncryption::Padding::PKCS7);
+// Various strings
+QString WebWallet::strIP = "";
+QString WebWallet::wPassword = "";
+QString WebWallet::wName = "";
 
 // pairing string
 QString WebWallet::_ps = "";
@@ -114,7 +111,30 @@ QByteArray WebWallet::_lk = "";
 // LIV - last initial vector
 QByteArray WebWallet::_liv = "";
 
-QString random_string(std::size_t length) {
+// Plaintext Public IP feedback servers (HTTPS only)
+// i.e. { "Hostname", "Path" }
+list<vector<string>> WebWallet::serverURLs = {
+    { "api.ipify.org", "/" },
+    { "www.icanhazip.com", "/" },
+    { "ipecho.net", "/plain" },
+    { "myip.dnsomatic.com", "/" }
+};
+std::uniform_int_distribution<> WebWallet::randIP(0, serverURLs.size() - 1);
+
+// transactionCreatedHandler - Handler to pass along transactions to wallet
+void WebWallet::transactionCreatedHandler(
+    PendingTransaction *tx, 
+    QVector<QString> &destinationAddresses, 
+    QString &payment_id, 
+    quint32 mixin_count) 
+{
+    if (currentWallet != NULL) {
+        currentWallet->commitTransactionAsync(tx);
+    }
+}
+
+// random_string - Generate a random string
+QString WebWallet::random_string(std::size_t length) {
     const std::string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     const int cSize = chars.size();
 
@@ -130,7 +150,8 @@ QString random_string(std::size_t length) {
     return random_string;
 }
 
-QString random_string_pairing(std::size_t length) {
+// random_string_pairing - Generate random pairing code string
+QString WebWallet::random_string_pairing(std::size_t length) {
     const std::string chars = "123456789ABCDEFGHIJKLMNPQRSTUVWXYZ";
     const int cSize = chars.size();
     std::uniform_int_distribution<> randString(0, cSize - 1);
@@ -145,21 +166,19 @@ QString random_string_pairing(std::size_t length) {
     return random_string.toUpper();
 }
 
-void WebWallet::transactionCreatedHandler(
-    PendingTransaction *tx, 
-    QVector<QString> &destinationAddresses, 
-    QString &payment_id, 
-    quint32 mixin_count) 
-{
-    if (currentWallet) {
-        currentWallet->commitTransactionAsync(tx);
-    }
+// restart - Restart the web wallet api server
+void WebWallet::restart() {
+    qInfo() << "Web wallet: Restarting";
+    stop();
+    start();
 }
 
+// start - Start the web wallet api server
 Q_INVOKABLE void WebWallet::start() {
-    if (started) {
+    if (started || starting) {
         return;
     }
+    starting = true;
     
     qInfo() << "Web wallet: Starting";
 
@@ -451,46 +470,69 @@ Q_INVOKABLE void WebWallet::start() {
         // Note that connection timeouts will also call this handle with ec set to SimpleWeb::errc::operation_canceled
     };
 
-    WebWallet::server_thread = std::thread([]() {
+    server_thread = std::thread([]() {
         // Start server
         server.start([](unsigned short port) {
             started = true;
+            starting = false;
             qInfo() << "Web wallet: Started";
         });
     });
 }
 
+// stop - Stops the web wallet api
 Q_INVOKABLE void WebWallet::stop() {
-    if (!started) {
+    qInfo() << "Web wallet: Stopping";
+
+    if (!started || starting) {
         return;
     }
+    started = false;
+    starting = false;
     server.stop();
     server_thread.detach();
-    started = false;
     
     qInfo() << "Web wallet: Stopped";
 }
 
+// getPort - Returns randomly selected port number within a range
+Q_INVOKABLE int WebWallet::getPort(int portStart, int portEnd) {
+    if(portStart < 49152)
+        portStart = 49152;
+    if(portEnd < 49152)
+        portEnd = 49152;
+    if(portStart > 65535)
+        portStart = 65535;
+    if(portEnd > 65535)
+        portEnd = 65535;
+    if(portEnd < portStart)
+        portEnd = portStart;
+    portNumberRangeStart = portStart;
+    portNumberRange = portEnd - portStart + 1;
+
+    std::uniform_int_distribution<int> randPort(portStart, portEnd);
+    portNumber = randPort(rng);
+
+    // Restart web wallet server to take new port number
+    restart();
+
+    qInfo() << "Server port:" << portNumber;
+
+    return portNumber;
+}
+
+// getPublicIPJSON - Client request to get public IP
 Q_INVOKABLE QString WebWallet::getPublicIPJSON() {
 
     // Return cached IP if already retrieved
     if (QString::compare(strIP, "", Qt::CaseInsensitive) != 0) {
         return strIP;
     }
-
-    // Plaintext Public IP feedback servers (HTTPS only)
-    // i.e. { "Hostname", "Path" }
-    list<vector<string>> serverURLs = {
-        { "api.ipify.org", "/" },
-        { "www.icanhazip.com", "/" },
-        { "ipecho.net", "/plain" },
-        { "myip.dnsomatic.com", "/" }
-    };
     
     // Try until IP is found
     int retries = serverURLs.size();
     while (retries-- > 0 && QString::compare(strIP, "", Qt::CaseInsensitive) == 0) {
-        int randIndex = rand() % serverURLs.size();
+        int randIndex = randIP(rng);
         auto sURL = serverURLs.begin();
         std::advance(sURL, randIndex);
         vector<string> serverURL = vector<string> (*sURL);
@@ -523,37 +565,8 @@ Q_INVOKABLE QString WebWallet::getPublicIPJSON() {
 
 }
 
-Q_INVOKABLE int WebWallet::getPort(int portStart, int portEnd) {
-    if(portStart < 49152)
-        portStart = 49152;
-    if(portEnd < 49152)
-        portEnd = 49152;
-    if(portStart > 65535)
-        portStart = 65535;
-    if(portEnd > 65535)
-        portEnd = 65535;
-    if(portEnd < portStart)
-        portEnd = portStart;
-    portNumberRangeStart = portStart;
-    portNumberRange = portEnd - portStart + 1;
-    // qCritical() << "Server port:" << portNumber;
-
-    if(portNumber < portStart || portNumber > portEnd) {
-        portNumber = randPort(rng);
-        // Restart web wallet server to take new port number
-        WebWallet::stop();
-        WebWallet::start();
-    }
-    return portNumber;
-}
-
-Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
-    if(!notPortNumber) {
-        portNumber = randPort(rng);
-        // Restart web wallet server to take new port number
-        WebWallet::stop();
-        WebWallet::start();
-    }
+// refresh - Refresh server url path and keys
+Q_INVOKABLE void WebWallet::refresh() {
 
     pt::ptree outJSON;
 
@@ -581,11 +594,9 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
 
     QString decodedString = QString(encryption.removePadding(decodeBytes));
 
-    if(webwalletMenu) {
+    if(webwalletMenu != NULL) {
         // Reset key change flag
         webwalletMenu->setProperty("keysChanged", false);
-        // Hack: Refresh properties
-        webwalletMenu->setProperty("a", !webwalletMenu->property("a").toBool());
     }
 
     // Debugging information
@@ -605,6 +616,7 @@ Q_INVOKABLE void WebWallet::refresh(bool notPortNumber) {
     return;
 }
 
+// run - Syncs the shared variables between the webwallet engine and the QML frontend and returns the app URL
 Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName, QObject *wwMenu) {
     if (useWallet != NULL) {
         currentWallet = useWallet;
@@ -619,7 +631,7 @@ Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QS
 
 
     if (_p == "") {
-        WebWallet::refresh(true);
+        refresh();
     }
 
 

@@ -29,32 +29,54 @@
 #include <QObject>
 #include <QString>
 #include <thread>
+#include <Qt-AES/qaesencryption.h>
 
 #include "Wallet.h"
 
 #include <simple-web-server/server_http.hpp>
 
+using namespace std;
 using HttpServer = SimpleWeb::Server<SimpleWeb::HTTP>;
 
 class WebWallet : public QObject {
     Q_OBJECT
     public:
+        Q_INVOKABLE static int getPort(int portStart, int portEnd);
+
+        Q_INVOKABLE static void refresh();
+        Q_INVOKABLE static void restart();
         Q_INVOKABLE static void start();
         Q_INVOKABLE static void stop();
+
         Q_INVOKABLE static QString getPublicIPJSON();
-        Q_INVOKABLE static int getPort(int portStart, int portEnd);
-        Q_INVOKABLE static void refresh(bool notPortNumber = false);
-        Q_INVOKABLE static QString run(Wallet * useWallet, bool requirePassword, QString walletPassword, bool blackTheme, QString walletName, QObject * webwalletMenu);
+        Q_INVOKABLE static QString run(Wallet * useWallet, bool requirePassword, QString walletPassword, bool blackTheme, QString walletName, QObject * wwMenu);
         Q_INVOKABLE static QString getPairingCode();
 
     private:
+        static std::random_device rd;
+        static std::mt19937 rng;
+        static QObject * webwalletMenu;
         static HttpServer server;
         static std::thread server_thread;
-        static bool started;
-        static QString strIP;
+        static Wallet * currentWallet;
 
-        // Use last parameters flag
+        // AES Encryption engine
+        static QAESEncryption encryption;
+        
+        static bool requirePassword;
+        static bool started;
+        static bool starting;
         static bool useLast;
+        static bool blackTheme;
+
+        // Default port number range
+        static int portNumberRangeStart;
+        static int portNumberRange;
+        static int portNumber;
+
+        static QString strIP;
+        static QString wPassword;
+        static QString wName;
         
         // pairing string
         static QString _ps;
@@ -80,10 +102,16 @@ class WebWallet : public QObject {
         // last initial vector
         static QByteArray _liv;
 
+        static list<vector<string>> serverURLs;
+        static std::uniform_int_distribution<> randIP;
+
         static void transactionCreatedHandler(
             PendingTransaction *tx, 
             QVector<QString> &destinationAddresses, 
             QString &payment_id, 
             quint32 mixin_count);
+
+        static QString random_string(std::size_t length);
+        static QString random_string_pairing(std::size_t length);
 
 };
