@@ -506,7 +506,7 @@ Rectangle {
                         property int num: parseInt(text)
 
                         background: Rectangle {
-                            color: MoneroComponents.Style.blackTheme ? "transparent" : "white"
+                            color: "transparent"
                             radius: 3
                             border.color: parent.activeFocus ? MoneroComponents.Style.inputBorderColorActive : MoneroComponents.Style.inputBorderColorInActive
                             border.width: 1
@@ -540,7 +540,7 @@ Rectangle {
                         property int num: parseInt(text)
 
                         background: Rectangle {
-                            color: MoneroComponents.Style.blackTheme ? "transparent" : "white"
+                            color: "transparent"
                             radius: 3
                             border.color: parent.activeFocus ? MoneroComponents.Style.inputBorderColorActive : MoneroComponents.Style.inputBorderColorInActive
                             border.width: 1
