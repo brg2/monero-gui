@@ -1,3 +1,30 @@
+// Copyright (c) 2014-2023, The Monero Project
+//
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without modification, are
+// permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this list of
+//    conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice, this list
+//    of conditions and the following disclaimer in the documentation and/or other
+//    materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its contributors may be
+//    used to endorse or promote products derived from this software without specific
+//    prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+// THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+// THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 const formatter = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
@@ -34,6 +61,7 @@ let encrypted = window.location.hash.split('#')[1].substring(1),
     walletName = '',
     paused = false
 
+// init - Initialize the app
 function init() {
     syncBlackTheme()
 
@@ -56,6 +84,7 @@ function init() {
     }
 }
 
+// processPairCode - Take the pairing code input and attempt to decode the hash string
 function processPairCode() {
     function fail() {
         alert("Incorrect pairing code. Please try again.")
@@ -81,6 +110,7 @@ function processPairCode() {
     }
 }
 
+// postAPI - Make a ping or payload request to the server
 function postAPI(payload) {
     var jsonSend = {k: _k.toString()}
     if (payload) {
@@ -173,6 +203,7 @@ function postAPI(payload) {
     })
 }
 
+// errHandler - Handle any errors that happen with the api request
 function errHandler(e) {
     // alert("Error: Connection failed");
     console.error('Web wallet: Connection failure', e)
@@ -198,6 +229,7 @@ function errHandler(e) {
     }
 }
 
+// postAPIInputs - Collect the input values in order to make a payload request to the api
 function postAPIInputs() {
     let address = $("#address").val()
     let amount = $("#amount").val()
@@ -216,42 +248,56 @@ function postAPIInputs() {
     })
 }
 
+// clearInputs - Clear the input values
 function clearInputs() {
-    $("#address").val("");
-    $("#amount").val("");
-    $("#password").val("");
+    clearAddress()
+    clearAmount()
+    clearPassword()
 }
 
+// clearAddress - Clear the address input
 function clearAddress() {
     $("#address").val("");
 }
 
+// clearAmount - Clear the amount input
 function clearAmount() {
     $("#amount").val("");
 }
 
+// clearPassword - Clear the password input
+function clearPassword() {
+    $("#password").val("");
+}
+
+// scanQR - Redirect to a qr code reader that will return the address
 function scanQR() {
     window.location = "https://brg2.github.io/qrscan#" + encodeURIComponent(window.location.href);
 }
 
+// selectSelfAddress - Show a prompt that will allow the user to copy the wallet address
 function selectSelfAddress(elId) {
     if (selfaddress)
         prompt("", selfaddress)
 }
 
+// useBalance - Use the full wallet balance in the amount input
 function useBalance() {
     if(balance && !isNaN(balance))
         $('#amount').val(balance)
 }
 
+// showSelfQR - Display the qr code of the wallet address
 function showSelfQR() {
     app.data.showSelfQR = true
 }
 
+// hideSelfQR - Hide the wallet address qr code
 function hideSelfQR() {
     app.data.showSelfQR = false
 }
 
+// pcInputEnter - Enter the character into the pairing code inputs
 function pcInputEnter(character) {
     if(!character) return
     let pcInputNum = getEmptyPCInput()
@@ -261,6 +307,7 @@ function pcInputEnter(character) {
         setTimeout(processPairCode)
 }
 
+// clearPairingCode - Clear all the pairing code inputs
 function clearPairingCode() {
     for(let i = 1; i < 7; i++) {
         $('#pcInput' + i).val('')
@@ -268,6 +315,7 @@ function clearPairingCode() {
     setTimeout(gotoNextPCInput)
 }
 
+// getEmptyPCInput - Get the next empty pairing code input
 function getEmptyPCInput() {
     let lastNum 
     for(let i = 6; i > 0; i--) {
@@ -279,6 +327,7 @@ function getEmptyPCInput() {
     return lastNum
 }
 
+// getPCInput - Collect the values of all the pairing code inputs
 function getPCInput() {
     var pc = ''
     for(let i = 1; i < 7; i++) {
@@ -287,12 +336,15 @@ function getPCInput() {
     return pc
 }
 
+// setPCInput - Place a string of values into the pairing code inputs 
+//   (used when pasting from the clipboard)
 function setPCInput(strText, offset = 0) {
     for(let i = 1 + (offset); i < 7; i++) {
         $('#pcInput' + i).val(strText.slice(i - 1, i))
     }
 }
 
+// pcInputPaste - Paste a text value into the pairing code inputs
 function pcInputPaste(e, offset) {
     var pasteText = e.clipboardData.getData('text')
     setPCInput(pasteText, offset)
@@ -301,6 +353,7 @@ function pcInputPaste(e, offset) {
         setTimeout(processPairCode)
 }
 
+// pcInputText - Enter a character from the keyboard into the pairing code inputs
 function pcInputText(e) {
     const inputEl = e.currentTarget
     inputEl.value = inputEl.value.toUpperCase()
@@ -308,6 +361,7 @@ function pcInputText(e) {
         setTimeout(gotoNextPCInput)
 }
 
+// gotoNextPCInput - Focus to the next empty pairing code input
 function gotoNextPCInput() {
     if(getEmptyPCInput())
         $('#pcInput' + getEmptyPCInput()).focus()
@@ -316,6 +370,7 @@ function gotoNextPCInput() {
             setTimeout(processPairCode)
 }
 
+// pauseConnection - Pauses the api connection
 function pauseConnection(s) {
     paused = s.paused = !s.paused
     if(!paused) {
@@ -323,6 +378,7 @@ function pauseConnection(s) {
     }
 }
 
+// syncBlackTheme - Sets the dark or light theme class
 function syncBlackTheme() {
     if(blackTheme)
         $(document.body).addClass('dark')
