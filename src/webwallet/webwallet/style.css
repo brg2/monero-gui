@@ -29,231 +29,231 @@
 */
 
 body {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    padding-top: 10px;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  padding-top: 10px;
+  align-items: center;
 }
 
 body.loaded {
-    transition: background ease 0.5s;
+  transition: background ease 0.5s;
 }
 
 body.dark {
-    background-color: #1b1b1b;
-    color: white;
+  background-color: #1b1b1b;
+  color: white;
 }
 
-#app {
-    display: flex;
-    flex-direction: column;
-    margin: 0 auto;
-    align-items: center;
-    flex-grow: 0;
-    width: 320px;
-    transition: filter ease 0.5s;
+#index {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  align-items: center;
+  flex-grow: 0;
+  width: 320px;
+  transition: filter ease 0.5s;
 }
 
 button {
-    display: flex !important;
-    align-items: center;
+  display: flex !important;
+  align-items: center;
 }
 
-#app .input-group button.x-clear {
-    width: 30px;
+#index .input-group button.x-clear {
+  width: 30px;
 }
 
-#app .input-group button {
-    border-color: #9b9b9b !important;
-    fill: #6c757d;
-    width: 40px;
-    justify-content: center;
-    padding: 0px;
-    transition: fill .15s ease-in-out, 
-        color .15s ease-in-out, 
-        background-color .15s ease-in-out, 
-        border-color .15s ease-in-out,
-        box-shadow .15s ease-in-out;
+#index .input-group button {
+  border-color: #9b9b9b !important;
+  fill: #6c757d;
+  width: 40px;
+  justify-content: center;
+  padding: 0px;
+  transition: fill 0.15s ease-in-out, color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out, border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
 }
 
-#app .input-group button:hover {
-    fill: white;
+#index .input-group button:hover {
+  fill: white;
 }
 
 body.dark #controls .input-group button {
-    fill: #898989;
-    color: #898989 !important;
+  fill: #898989;
+  color: #898989 !important;
 }
 
 body.dark #controls .input-group button:hover {
-    fill: white;
-    color: white !important;
+  fill: white;
+  color: white !important;
 }
 
 .buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-    position: relative;
-    align-items: center;
-    width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  position: relative;
+  align-items: center;
+  width: 100%;
 }
 
 body.dark .form-control {
-    color: #ced4da;
-    background-color: transparent;
+  color: #ced4da;
+  background-color: transparent;
 }
 
 body.dark .form-control::placeholder {
-    color: #ced4da;
+  color: #ced4da;
 }
 
 #moneroLogo {
-    width: 26px;
-    height: 26px;
-    background: white;
-    padding: 2px;
-    border-radius: 100%;
+  width: 26px;
+  height: 26px;
+  background: white;
+  padding: 2px;
+  border-radius: 100%;
 }
 
 #moneroTitle {
-    text-transform: uppercase;
-    margin-left: 5px;
-    font-weight: bold;
-    font-size: 26px;
-    line-height: normal;
+  text-transform: uppercase;
+  margin-left: 5px;
+  font-weight: bold;
+  font-size: 26px;
+  line-height: normal;
 }
 
 #title {
-    margin-bottom: 20px;
-    text-align: center;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 #qrcode {
-    width: 320px;
-    height: 320px;
-    margin-top: 20px;
-    cursor: pointer;
-    transition: filter ease 0.5s;
+  width: 320px;
+  height: 320px;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: filter ease 0.5s;
 }
 
 #qrcode > svg {
-    border-radius: .5rem;
+  border-radius: 0.5rem;
 }
 
 .blur {
-    filter: blur(250px) opacity(0);
-    pointer-events: none;
+  filter: blur(250px) opacity(0);
+  pointer-events: none;
 
-    /* Hack for safari */
-    -webkit-backface-visibility: hidden;
-    -moz-backface-visibility: hidden;
-    -webkit-transform: translate3d(0, 0, 0);
-    -moz-transform: translate3d(0, 0, 0);
+  /* Hack for safari */
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
 }
 
 #amountButton {
-    font-size: 150%;
+  font-size: 150%;
 }
 
 .spacer {
-    display: flex;
-    flex-grow: 1;
+  display: flex;
+  flex-grow: 1;
 }
 
 /* Monero primary button */
 .btn-primary-xmr {
-    --bs-btn-color: #fff;
-    --bs-btn-bg: #ff6600;
-    --bs-btn-border-color: #ff6600;
-    --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: #bf4c00;
-    --bs-btn-hover-border-color: #bf4c00;
-    --bs-btn-focus-shadow-rgb: 60,153,110;
-    --bs-btn-active-color: #fff;
-    --bs-btn-active-bg: #bf4c00;
-    --bs-btn-active-border-color: #bf4c00;
-    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
-    --bs-btn-disabled-color: #fff;
-    --bs-btn-disabled-bg: #793000;
-    --bs-btn-disabled-border-color: #793000;
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #ff6600;
+  --bs-btn-border-color: #ff6600;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #bf4c00;
+  --bs-btn-hover-border-color: #bf4c00;
+  --bs-btn-focus-shadow-rgb: 60, 153, 110;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #bf4c00;
+  --bs-btn-active-border-color: #bf4c00;
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #793000;
+  --bs-btn-disabled-border-color: #793000;
 }
 
 .noselect {
   -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
 }
 
 #disconnected {
-    position: absolute;
-    top: 50%;
-    color: rgb(133, 133, 133);
+  position: absolute;
+  top: 50%;
+  color: rgb(133, 133, 133);
 }
 
 /* Pairing Code Input Pad */
 #pairingEntryPad {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .pairing-input-pad {
-    width: 35px;
-    height: 40px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 30px;
-    border-radius: 5px;
+  width: 35px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 30px;
+  border-radius: 5px;
+  font-family: monospace;
 }
 
 .pairing-input-pad:hover {
-    background-color: #f1f1f1;
+  background-color: #f1f1f1;
 }
 
 body.dark .pairing-input-pad:hover {
-    background-color: #3b3b3b;
+  background-color: #3b3b3b;
 }
 
 #pairingFields {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .pairing-input {
-    padding: 10px;
-    text-align: center;
+  padding: 10px;
+  text-align: center;
+  font-family: monospace;
 }
 
 #pairingTitle {
-    font-size: 24px;
-    margin-bottom: 10px;
+  font-size: 24px;
+  margin-bottom: 10px;
 }
 
 .pairing-pad-line {
-    display: flex;
-    width: 100%;
-    justify-content: center;
+  display: flex;
+  width: 100%;
+  justify-content: center;
 }
 
 body.dark .input-group-text {
-    background-color: #3b3b3b;
+  background-color: #3b3b3b;
 }
 /* End Pairing Code Input Pad */
 
 #toggleSelfQRButton {
-    fill: white;
+  fill: white;
 }
 
 #togglePauseResume {
-    stroke: white;
-    fill: white;
+  stroke: white;
+  fill: white;
 }

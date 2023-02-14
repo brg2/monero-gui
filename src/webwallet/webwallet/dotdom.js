@@ -119,6 +119,7 @@
                 set(target, name, value) {                              // ii. set (i.e. object[name] = value
                   timer()
                   target[name] = value
+                  return true
                 },
                 get(target, name) {                           // iii. get (i.e. console.log(object[name])
                   timer()

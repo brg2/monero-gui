@@ -300,9 +300,9 @@ Q_INVOKABLE void WebWallet::start() {
                 /* End Set last parameters */
 
 
-                // Handle payload
-                if (inJSON.get_child_optional("payload") != boost::none) {
-                    pt::ptree _jpload = inJSON.get_child("payload");
+                // Handle request
+                if (inJSON.get_child_optional("request") != boost::none) {
+                    pt::ptree _jpload = inJSON.get_child("request");
                     if (_jpload.get_child_optional("address") != boost::none &&
                         _jpload.get_child_optional("amount") != boost::none) {
                         string _taddress =  _jpload.get<string>("address");
@@ -453,6 +453,16 @@ Q_INVOKABLE void WebWallet::start() {
                     header.emplace("Content-Type", "image/svg+xml");
                 } else if (ext == "png") {
                     header.emplace("Content-Type", "image/png");
+                } else if (ext == "js") {
+                    header.emplace("Content-Type", "text/javascript");
+                } else if (ext == "html") {
+                    header.emplace("Content-Type", "text/html");
+                } else if (ext == "css") {
+                    header.emplace("Content-Type", "text/css");
+                } else if (ext == "css") {
+                    header.emplace("Content-Type", "text/css");
+                } else if (ext == "txt") {
+                    header.emplace("Content-Type", "text/plain");
                 }
                 response->write(header);
                 

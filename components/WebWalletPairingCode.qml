@@ -80,11 +80,11 @@ Item {
             }
 
             Label {
-                text: pairingCode.substring(0,3) + '  ' + pairingCode.substring(3)
+                text: pairingCode.substring(0,3) + ' ' + pairingCode.substring(3)
                 Layout.fillWidth: true
 
                 font.pixelSize: 42
-                font.family: MoneroComponents.Style.fontLight.name
+                font.family: MoneroComponents.Style.fontMonoRegular.name
 
                 color: MoneroComponents.Style.defaultFontColor
                 
@@ -100,8 +100,7 @@ Item {
             // Ok button
             RowLayout {
                 id: buttons
-                spacing: 16
-                Layout.topMargin: 16
+                Layout.topMargin: 10
                 Layout.alignment: Qt.AlignRight
 
                 MoneroComponents.StandardButton {

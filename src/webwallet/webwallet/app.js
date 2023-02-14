@@ -26,362 +26,394 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-const formatter = new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 12,
-})
+import { index } from "./index.js";
 
-let encrypted = window.location.hash.split('#')[1].substring(1),
-    isRecover = encrypted.slice(0,1) == '?',
-    context = isRecover ? JSON.parse(CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Base64.parse(encrypted.split('?')[1]))) : '',
-    _ps,
-    _k,
-    _iv,
-    _ivps,
-    _p,
-    options = {
-        mode: CryptoJS.mode.CBC,
-        iv: _ivps,
-        padding: CryptoJS.pad.Pkcs7
-    },
-    _jps,
-    _jk,
-    _address = isRecover && context.address ? context.address : "",
-    skippedParams = false,
-    pingTimeout,
-    reqPassword,
-    connected = false,
-    selfaddress = "",
-    blackTheme = isRecover ? null : window.location.hash.substring(1,2) == "1",
-    currentStatus,
-    balance,
-    retrying = false,
-    pcLength = 6,
-    qrcode = '',
-    walletName = '',
-    paused = false
+export const formatter = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 12,
+});
 
-// init - Initialize the app
-function init() {
-    syncBlackTheme()
+const fullHash = window.location.hash.split("#")[1];
 
-    if(!isRecover)
-        return clearPairingCode()
-    _ps = context.ps
-    _k = CryptoJS.enc.Hex.parse(context.k)
-    _iv = CryptoJS.enc.Hex.parse(context.iv)
-    _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_iv.toString() + _ps))
-    options.iv = _ivps
-    _p = window.location.origin + (isRecover ? ('/' + context.p) : window.location.pathname)
-    _jps = isRecover ? context.ps : CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8)
-    _jk = isRecover ? context.k : CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps))
+export let isRecover = fullHash.slice(0, 1) == "?",
+  qrcode = "",
+  reqPassword,
+  pcLength = 6,
+  walletName = "",
+  strRecoverHash;
 
-    if(_ps == '' || _jk.toString() != _k.toString()) {
-        alert("Incorrect pairing code. Please try again.")
-        clearPairingCode()
-    } else {
-        postAPI()
-    }
-}
+let encrypted = fullHash.substring(1),
+  context = isRecover
+    ? JSON.parse(
+        CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Base64.parse(encrypted))
+      )
+    : "",
+  _ps,
+  _k,
+  _iv,
+  _ivps,
+  _p,
+  options = {
+    mode: CryptoJS.mode.CBC,
+    iv: _ivps,
+    padding: CryptoJS.pad.Pkcs7,
+  },
+  _jps,
+  _jk,
+  pingTimeout,
+  connected = false,
+  selfaddress = "",
+  blackTheme = isRecover ? null : fullHash.slice(0, 1) == "1",
+  balance,
+  retrying = false,
+  paused = false;
+
+export let address = isRecover && context.address ? context.address : "";
+
+// app - Initialize the app
+export const app = () => {
+  syncBlackTheme();
+
+  if (!isRecover) return clearPairingCode();
+  _ps = context.ps;
+  _k = CryptoJS.enc.Hex.parse(context.k);
+  _iv = CryptoJS.enc.Hex.parse(context.iv);
+  _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_iv.toString() + _ps));
+  options.iv = _ivps;
+  _p =
+    window.location.origin +
+    (isRecover ? "/" + context.p : window.location.pathname);
+  _jps = isRecover
+    ? context.ps
+    : CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8);
+  _jk = isRecover ? context.k : CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps));
+
+  if (_ps == "" || _jk.toString() != _k.toString()) {
+    alert("Incorrect pairing code. Please try again.");
+    clearPairingCode();
+  } else {
+    postAPI();
+  }
+};
 
 // processPairCode - Take the pairing code input and attempt to decode the hash string
 function processPairCode() {
-    function fail() {
-        alert("Incorrect pairing code. Please try again.")
-        clearPairingCode()
-    }
-    try {
-        _ps = getPCInput()
-        _k = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_ps)),
-        _iv = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_ps)),
-        _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_iv.toString() + _ps))
-        options.iv = _ivps
-        _jps = CryptoJS.AES.decrypt(encrypted, _k, options).toString(CryptoJS.enc.Utf8),
-        _jk = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps))
-        _p = window.location.origin + window.location.pathname
+  function fail() {
+    alert("Incorrect pairing code. Please try again.");
+    clearPairingCode();
+  }
+  try {
+    _ps = getPCInput();
+    _k = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_ps));
+    _iv = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_ps));
+    _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(_iv.toString() + _ps));
+    options.iv = _ivps;
+    _jps = CryptoJS.AES.decrypt(encrypted, _k, options).toString(
+      CryptoJS.enc.Utf8
+    );
+    _jk = CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(_jps));
+    _p = window.location.origin + window.location.pathname;
 
-        if(_ps == '' || _jk.toString() != _k.toString()) {
-            fail()
-        } else {
-            postAPI()
-        }
-    } catch(e) {
-        fail()
+    if (_ps == "" || _jk.toString() != _k.toString()) {
+      fail();
+    } else {
+      postAPI();
     }
+  } catch (e) {
+    fail();
+  }
 }
 
 // postAPI - Make a ping or payload request to the server
-function postAPI(payload) {
-    var jsonSend = {k: _k.toString()}
-    if (payload) {
-        jsonSend.payload = payload;
-    }
-    var _ejson = CryptoJS.AES.encrypt(JSON.stringify(jsonSend), _k, options).toString()
+function postAPI(request) {
+  var jsonSend = { k: _k.toString() };
+  if (request) {
+    jsonSend.request = request;
+  }
+  var _ejson = CryptoJS.AES.encrypt(
+    JSON.stringify(jsonSend),
+    _k,
+    options
+  ).toString();
 
-    // Clear any calls of this method to avoid duplicates
-    if(pingTimeout) 
-        pingTimeout = clearTimeout(pingTimeout)
+  // Clear any calls of this method to avoid duplicates
+  if (pingTimeout) pingTimeout = clearTimeout(pingTimeout);
 
-    if(paused)
-        return pingTimeout = setTimeout(postAPI, 3000)
+  if (paused) return (pingTimeout = setTimeout(postAPI, 3000));
 
-    $.ajax({
-        url: _p,
-        method: "POST",
-        data: _ejson,
-        success: function( crypResponse ) {
-            if (!crypResponse) {
-                return errHandler();
-            }
-            let jsonResponse = JSON.parse(CryptoJS.AES.decrypt(crypResponse, _k, options).toString(CryptoJS.enc.Utf8))
-            if (!jsonResponse['k'] || !jsonResponse['iv'] || !jsonResponse['p'])
-                return errHandler();
+  $.ajax({
+    url: _p,
+    method: "POST",
+    data: _ejson,
+    success: function (crypResponse) {
+      if (!crypResponse) {
+        return errHandler();
+      }
+      let jsonResponse = JSON.parse(
+        CryptoJS.AES.decrypt(crypResponse, _k, options).toString(
+          CryptoJS.enc.Utf8
+        )
+      );
+      if (!jsonResponse["k"] || !jsonResponse["iv"] || !jsonResponse["p"])
+        return errHandler();
 
-            // Connection success
-            _k = CryptoJS.enc.Hex.parse(jsonResponse.k)
-            _iv = CryptoJS.enc.Hex.parse(jsonResponse.iv)
-            _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(jsonResponse.iv + _ps))
-            _p = window.location.origin + '/' + jsonResponse.p
+      // Connection success
+      _k = CryptoJS.enc.Hex.parse(jsonResponse.k);
+      _iv = CryptoJS.enc.Hex.parse(jsonResponse.iv);
+      _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(jsonResponse.iv + _ps));
+      _p = window.location.origin + "/" + jsonResponse.p;
 
-            let newReqPassword = jsonResponse.rp == "1"
-            if (newReqPassword != reqPassword) {
-                reqPassword = newReqPassword
-                app.data.reqPassword = reqPassword
-            }
+      let newReqPassword = jsonResponse.rp == "1";
+      if (newReqPassword != reqPassword) {
+        reqPassword = newReqPassword;
+        index.data.reqPassword = reqPassword;
+      }
 
-            blackTheme = jsonResponse.bt == "1"
+      blackTheme = jsonResponse.bt == "1";
 
-            let newbalance = jsonResponse.bal / 1000000000000
-            if (newbalance != balance) {
-                balance = newbalance
-                app.data.balance = balance
-            }
+      let newbalance = jsonResponse.bal / 1000000000000;
+      if (newbalance != balance) {
+        balance = newbalance;
+        index.data.balance = balance;
+      }
 
-            // Show qr code of self address
-            if (jsonResponse.self && selfaddress != jsonResponse.self || !connected) {
-                selfaddress = jsonResponse.self
-                qrcode = new QRCode({content: selfaddress, width: 320, height: 320, padding: 3}).svg()
-                if (jsonResponse.name) {
-                    walletName = jsonResponse.name
-                    document.title = walletName + " (" + selfaddress.slice(0, 4) + "..." + selfaddress.slice(-4) + ")"
-                }
-            }
-
-            syncBlackTheme()
-
-            options.iv = _ivps
-
-            jsonResponse.ps = _ps
-
-            // Only save required parameters in recovery
-            strRecoverHash = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(JSON.stringify({
-                iv: jsonResponse.iv,
-                k: jsonResponse.k,
-                p: jsonResponse.p,
-                ps: jsonResponse.ps
-            })))
-
-            // Save current context in hash if user reloads (not sent over network and changes every ~3 seconds)
-            window.location.replace( '#?' + strRecoverHash);
-
-            if(!connected) {
-                connected = true;
-                retrying = false;
-                app.data.connected = true;
-                app.data.retrying = false;
-            }
-
-            pingTimeout = setTimeout(postAPI, 3000)
-        },
-        error: errHandler,
-        complete() {
-            setTimeout(() => {
-                if(!$('body').hasClass('loaded'))
-                    $('body').addClass('loaded')
-            }, 10)
+      // Show qr code of self address
+      if (
+        (jsonResponse.self && selfaddress != jsonResponse.self) ||
+        !connected
+      ) {
+        selfaddress = jsonResponse.self;
+        qrcode = new QRCode({
+          content: selfaddress,
+          width: 320,
+          height: 320,
+          padding: 3,
+        }).svg();
+        if (jsonResponse.name) {
+          walletName = jsonResponse.name;
+          document.title =
+            walletName +
+            " (" +
+            selfaddress.slice(0, 4) +
+            "..." +
+            selfaddress.slice(-4) +
+            ")";
         }
-    })
+      }
+
+      syncBlackTheme();
+
+      options.iv = _ivps;
+
+      jsonResponse.ps = _ps;
+
+      // Only save required parameters in recovery
+      strRecoverHash = CryptoJS.enc.Base64.stringify(
+        CryptoJS.enc.Utf8.parse(
+          JSON.stringify({
+            iv: jsonResponse.iv,
+            k: jsonResponse.k,
+            p: jsonResponse.p,
+            ps: jsonResponse.ps,
+          })
+        )
+      );
+
+      // Save current context in hash if user reloads (not sent over network and changes every ~3 seconds)
+      window.location.replace("#?" + strRecoverHash);
+
+      if (!connected) {
+        connected = true;
+        retrying = false;
+        index.data.connected = true;
+        index.data.retrying = false;
+      }
+
+      pingTimeout = setTimeout(postAPI, 3000);
+    },
+    error: errHandler,
+    complete() {
+      setTimeout(() => {
+        if (!$("body").hasClass("loaded")) $("body").addClass("loaded");
+      }, 10);
+    },
+  });
 }
 
 // errHandler - Handle any errors that happen with the api request
 function errHandler(e) {
-    // alert("Error: Connection failed");
-    console.error('Web wallet: Connection failure', e)
+  // alert("Error: Connection failed");
+  console.error("Web wallet: Connection failure", e);
 
-    if(pingTimeout)
-        pingTimeout = clearTimeout(pingTimeout)
+  if (pingTimeout) pingTimeout = clearTimeout(pingTimeout);
 
-    if(!connected && !retrying) {
-        alert('A connection has already been used for this URL and pairing code. To start a new web wallet session, click "Refresh" in the web wallet interface settings and try again.')
-        window.close();
-        return;
-    } else {
-        if(!retrying) {
-            retrying = true;
-            app.data.retrying = true;
-            document.title = `${walletName} (Disconnected)`
-        }
-        pingTimeout = setTimeout(postAPI, 3000)
+  if (!connected && !retrying) {
+    alert(
+      'A connection has already been used for this URL and pairing code. To start a new web wallet session, click "Refresh" in the web wallet interface settings and try again.'
+    );
+    window.close();
+    return;
+  } else {
+    if (!retrying) {
+      retrying = true;
+      index.data.retrying = true;
+      document.title = `${walletName} (Disconnected)`;
     }
+    pingTimeout = setTimeout(postAPI, 3000);
+  }
 
-    if(connected) {
-        app.data.connected = connected = false
-    }
+  if (connected) {
+    index.data.connected = connected = false;
+  }
 }
 
 // postAPIInputs - Collect the input values in order to make a payload request to the api
-function postAPIInputs() {
-    let address = $("#address").val()
-    let amount = $("#amount").val()
-    if(!address)
-        return alert("Please enter an address")
-    if(!amount)
-        return alert("Please enter an amount")
-    if(reqPassword && !$("#password"))
-        return alert("Please enter a password")
-    if(!confirm("Sending " + formatter.format(amount) + " XMR to " + address + ".\n\nContinue?"))
-        return
-    postAPI({
-        address: $("#address").val(),
-        amount: $("#amount").val(),
-        password: $("#password").val()
-    })
-}
+export const postAPIInputs = () => {
+  let address = $("#address").val();
+  let amount = $("#amount").val();
+  if (!address) return alert("Please enter an address");
+  if (!amount) return alert("Please enter an amount");
+  if (reqPassword && !$("#password")) return alert("Please enter a password");
+  if (
+    !confirm(
+      "Sending " +
+        formatter.format(amount) +
+        " XMR to " +
+        address +
+        ".\n\nContinue?"
+    )
+  )
+    return;
+  postAPI({
+    address: $("#address").val(),
+    amount: $("#amount").val(),
+    password: $("#password").val(),
+  });
+};
 
 // clearInputs - Clear the input values
-function clearInputs() {
-    clearAddress()
-    clearAmount()
-    clearPassword()
-}
+export const clearInputs = () => {
+  clearAddress();
+  clearAmount();
+  clearPassword();
+};
 
 // clearAddress - Clear the address input
-function clearAddress() {
-    $("#address").val("");
-}
+export const clearAddress = () => {
+  $("#address").val("");
+};
 
 // clearAmount - Clear the amount input
-function clearAmount() {
-    $("#amount").val("");
-}
+export const clearAmount = () => {
+  $("#amount").val("");
+};
 
 // clearPassword - Clear the password input
 function clearPassword() {
-    $("#password").val("");
+  $("#password").val("");
 }
 
 // scanQR - Redirect to a qr code reader that will return the address
-function scanQR() {
-    window.location = "https://brg2.github.io/qrscan#" + encodeURIComponent(window.location.href);
-}
+export const scanQR = () => {
+  window.location =
+    "https://brg2.github.io/qrscan#" + encodeURIComponent(window.location.href);
+};
 
 // selectSelfAddress - Show a prompt that will allow the user to copy the wallet address
-function selectSelfAddress(elId) {
-    if (selfaddress)
-        prompt("", selfaddress)
-}
+export const selectSelfAddress = (elId) => {
+  if (selfaddress) prompt("", selfaddress);
+};
 
 // useBalance - Use the full wallet balance in the amount input
-function useBalance() {
-    if(balance && !isNaN(balance))
-        $('#amount').val(balance)
-}
+export const useBalance = () => {
+  if (balance && !isNaN(balance)) $("#amount").val(balance);
+};
 
 // showSelfQR - Display the qr code of the wallet address
-function showSelfQR() {
-    app.data.showSelfQR = true
-}
+export const showSelfQR = () => {
+  index.data.showSelfQR = true;
+};
 
 // hideSelfQR - Hide the wallet address qr code
-function hideSelfQR() {
-    app.data.showSelfQR = false
-}
+export const hideSelfQR = () => {
+  index.data.showSelfQR = false;
+};
 
 // pcInputEnter - Enter the character into the pairing code inputs
-function pcInputEnter(character) {
-    if(!character) return
-    let pcInputNum = getEmptyPCInput()
-    if(!pcInputNum) return
-    $('#pcInput' + pcInputNum).val(character)
-    if(pcInputNum == 6)
-        setTimeout(processPairCode)
-}
+export const pcInputEnter = (character) => {
+  if (!character) return;
+  let pcInputNum = getEmptyPCInput();
+  if (!pcInputNum) return;
+  $("#pcInput" + pcInputNum).val(character);
+  if (pcInputNum == 6) setTimeout(processPairCode);
+};
 
 // clearPairingCode - Clear all the pairing code inputs
-function clearPairingCode() {
-    for(let i = 1; i < 7; i++) {
-        $('#pcInput' + i).val('')
-    }
-    setTimeout(gotoNextPCInput)
-}
+export const clearPairingCode = () => {
+  for (let i = 1; i < 7; i++) {
+    $("#pcInput" + i).val("");
+  }
+  setTimeout(gotoNextPCInput);
+};
 
 // getEmptyPCInput - Get the next empty pairing code input
 function getEmptyPCInput() {
-    let lastNum 
-    for(let i = 6; i > 0; i--) {
-        if($('#pcInput' + i).val() == '')
-            lastNum = i;
-        else if(lastNum)
-            return lastNum
-    }
-    return lastNum
+  let lastNum;
+  for (let i = 6; i > 0; i--) {
+    if ($("#pcInput" + i).val() == "") lastNum = i;
+    else if (lastNum) return lastNum;
+  }
+  return lastNum;
 }
 
 // getPCInput - Collect the values of all the pairing code inputs
 function getPCInput() {
-    var pc = ''
-    for(let i = 1; i < 7; i++) {
-        pc += $('#pcInput' + i).val()
-    }
-    return pc
+  var pc = "";
+  for (let i = 1; i < 7; i++) {
+    pc += $("#pcInput" + i).val();
+  }
+  return pc;
 }
 
-// setPCInput - Place a string of values into the pairing code inputs 
+// setPCInput - Place a string of values into the pairing code inputs
 //   (used when pasting from the clipboard)
 function setPCInput(strText, offset = 0) {
-    for(let i = 1 + (offset); i < 7; i++) {
-        $('#pcInput' + i).val(strText.slice(i - 1, i))
-    }
+  for (let i = 1 + offset; i < 7; i++) {
+    $("#pcInput" + i).val(strText.slice(i - 1, i));
+  }
 }
 
 // pcInputPaste - Paste a text value into the pairing code inputs
-function pcInputPaste(e, offset) {
-    var pasteText = e.clipboardData.getData('text')
-    setPCInput(pasteText, offset)
-    e.currentTarget.blur()
-    if(getPCInput().length == pcLength)
-        setTimeout(processPairCode)
-}
+export const pcInputPaste = (e, offset) => {
+  var pasteText = e.clipboardData.getData("text");
+  setPCInput(pasteText, offset);
+  e.currentTarget.blur();
+  if (getPCInput().length == pcLength) setTimeout(processPairCode);
+};
 
 // pcInputText - Enter a character from the keyboard into the pairing code inputs
-function pcInputText(e) {
-    const inputEl = e.currentTarget
-    inputEl.value = inputEl.value.toUpperCase()
-    if(inputEl.value != '')
-        setTimeout(gotoNextPCInput)
-}
+export const pcInputText = (e) => {
+  const inputEl = e.currentTarget;
+  inputEl.value = inputEl.value.toUpperCase();
+  if (inputEl.value != "") setTimeout(gotoNextPCInput);
+};
 
 // gotoNextPCInput - Focus to the next empty pairing code input
 function gotoNextPCInput() {
-    if(getEmptyPCInput())
-        $('#pcInput' + getEmptyPCInput()).focus()
-    else
-        if(getPCInput().length == pcLength)
-            setTimeout(processPairCode)
+  if (getEmptyPCInput()) $("#pcInput" + getEmptyPCInput()).focus();
+  else if (getPCInput().length == pcLength) setTimeout(processPairCode);
 }
 
 // pauseConnection - Pauses the api connection
-function pauseConnection(s) {
-    paused = s.paused = !s.paused
-    if(!paused) {
-        postAPI()
-    }
-}
+export const pauseConnection = (s) => {
+  paused = s.paused = !s.paused;
+  if (!paused) {
+    postAPI();
+  }
+};
 
 // syncBlackTheme - Sets the dark or light theme class
 function syncBlackTheme() {
-    if(blackTheme)
-        $(document.body).addClass('dark')
-    else
-        $(document.body).removeClass('dark')
+  if (blackTheme) $(document.body).addClass("dark");
+  else $(document.body).removeClass("dark");
 }

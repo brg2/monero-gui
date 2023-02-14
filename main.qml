@@ -2284,6 +2284,7 @@ ApplicationWindow {
         txConfirmationPopup.clearFields()
         txConfirmationPopup.rejected()
         successfulTxPopup.close();
+        webwalletPairingCode.close();
         passwordDialog.open();
     }
 
