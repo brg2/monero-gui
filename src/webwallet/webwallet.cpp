@@ -61,12 +61,12 @@ std::random_device WebWallet::rd;
 std::mt19937 WebWallet::rng(rd());
 
 // Reference to menu QML
-QObject * WebWallet::webwalletMenu;
+QObject *WebWallet::webwalletMenu;
 
 // HTTP Server for POST/GET requests to
 HttpServer WebWallet::server;
 thread WebWallet::server_thread;
-Wallet * WebWallet::currentWallet;
+Wallet *WebWallet::currentWallet;
 
 QAESEncryption WebWallet::encryption(QAESEncryption::AES_256, QAESEncryption::CBC, QAESEncryption::Padding::PKCS7);
 
@@ -114,32 +114,39 @@ QByteArray WebWallet::_liv = "";
 // Plaintext Public IP feedback servers (HTTPS only)
 // i.e. { "Hostname", "Path" }
 list<vector<string>> WebWallet::serverURLs = {
-    { "api.ipify.org", "/" },
-    { "www.icanhazip.com", "/" },
-    { "ipecho.net", "/plain" },
-    { "myip.dnsomatic.com", "/" }
-};
+    {"api.ipify.org", "/"},
+    {"www.icanhazip.com", "/"},
+    {"ipecho.net", "/plain"},
+    {"myip.dnsomatic.com", "/"}};
 std::uniform_int_distribution<> WebWallet::randIP(0, serverURLs.size() - 1);
+
+enum RequestTypes
+{
+    CreateTransaction,
+    ListTxHistory
+};
 
 // transactionCreatedHandler - Handler to pass along transactions to wallet
 void WebWallet::transactionCreatedHandler(
-    PendingTransaction *tx, 
-    QVector<QString> &destinationAddresses, 
-    QString &payment_id, 
-    quint32 mixin_count) 
+    PendingTransaction *tx,
+    QVector<QString> &destinationAddresses,
+    QString &payment_id,
+    quint32 mixin_count)
 {
-    if (currentWallet != NULL) {
+    if (currentWallet != NULL)
+    {
         currentWallet->commitTransactionAsync(tx);
     }
 }
 
 // random_string - Generate a random string
-QString WebWallet::random_string(std::size_t length) {
+QString WebWallet::random_string(std::size_t length)
+{
     const std::string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     const int cSize = chars.size();
 
     std::uniform_int_distribution<> randString(0, cSize - 1);
-    
+
     QString random_string;
 
     for (std::size_t i = 0; i < length; ++i)
@@ -151,11 +158,12 @@ QString WebWallet::random_string(std::size_t length) {
 }
 
 // random_string_pairing - Generate random pairing code string
-QString WebWallet::random_string_pairing(std::size_t length) {
+QString WebWallet::random_string_pairing(std::size_t length)
+{
     const std::string chars = "123456789ABCDEFGHIJKLMNPQRSTUVWXYZ";
     const int cSize = chars.size();
     std::uniform_int_distribution<> randString(0, cSize - 1);
-    
+
     QString random_string;
 
     for (std::size_t i = 0; i < length; ++i)
@@ -167,26 +175,29 @@ QString WebWallet::random_string_pairing(std::size_t length) {
 }
 
 // restart - Restart the web wallet api server
-void WebWallet::restart() {
+void WebWallet::restart()
+{
     qInfo() << "Web wallet: Restarting";
     stop();
     start();
 }
 
 // start - Start the web wallet api server
-Q_INVOKABLE void WebWallet::start() {
-    if (started || starting) {
+Q_INVOKABLE void WebWallet::start()
+{
+    if (started || starting)
+    {
         return;
     }
     starting = true;
-    
+
     qInfo() << "Web wallet: Starting";
 
     server.config.port = portNumber;
-    
-    // API end point
-    server.resource["^/(.*?)/?$"]["POST"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
 
+    // API end point
+    server.resource["^/(.*?)/?$"]["POST"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request)
+    {
         QString encryptedPayload = QString::fromStdString(request->content.string());
 
         // qCritical() << "Trying payload" << encryptedPayload;
@@ -194,10 +205,11 @@ Q_INVOKABLE void WebWallet::start() {
         string curPath = request->path_match[1].str();
 
         if ((curPath != _ap.toStdString() && curPath != _lap.toStdString()) ||
-            (!useLast && curPath == _lap.toStdString())) {
+            (!useLast && curPath == _lap.toStdString()))
+        {
             // qCritical() << "Wrong path";
             *response << "HTTP/1.1 404 Not Found\r\n"
-                << "Content-Length: 0\r\n\r\n";
+                      << "Content-Length: 0\r\n\r\n";
             return;
         }
 
@@ -208,7 +220,8 @@ Q_INVOKABLE void WebWallet::start() {
 
         pt::ptree inJSON;
 
-        try {
+        try
+        {
 
             _ivps = QCryptographicHash::hash((_iv.toHex() + _ps).toUtf8(), QCryptographicHash::Md5);
 
@@ -225,17 +238,20 @@ Q_INVOKABLE void WebWallet::start() {
             read_json(buf, inJSON);
 
             useLast = true;
-
-        } catch(const exception &e) {
+        }
+        catch (const exception &e)
+        {
             // qCritical() << "Bad request, trying last key";
 
-            try {
+            try
+            {
 
-                if (!useLast) {
+                if (!useLast)
+                {
                     // qCritical() << "Trial 2 No use last parameters" << e.what();
                     return;
                 }
-                
+
                 _ivps = QCryptographicHash::hash((_liv.toHex() + _ps).toUtf8(), QCryptographicHash::Md5);
 
                 // qCritical() << "Trial 2 Last IVPS:" << _ivps.toHex();
@@ -251,7 +267,7 @@ Q_INVOKABLE void WebWallet::start() {
                 read_json(buf, inJSON);
 
                 // Use last parameters
-                
+
                 // Current key = Last key
                 _k.clear();
                 _k = _lk.mid(0, _lk.length());
@@ -267,18 +283,21 @@ Q_INVOKABLE void WebWallet::start() {
                 useLast = false;
 
                 // End use last parameters
-
-            } catch(const exception &e) {
+            }
+            catch (const exception &e)
+            {
                 qCritical() << "Trial 2 Bad request" << e.what();
                 return;
             }
         }
 
-        try {
+        try
+        {
             string _jk = inJSON.get<string>("k");
 
             string payload = "";
-            if (_jk == _k.toHex().toStdString()) {
+            if (_jk == _k.toHex().toStdString())
+            {
 
                 /* Set last parameters */
 
@@ -299,45 +318,73 @@ Q_INVOKABLE void WebWallet::start() {
 
                 /* End Set last parameters */
 
-
                 // Handle request
-                if (inJSON.get_child_optional("request") != boost::none) {
+                if (inJSON.get_child_optional("request") != boost::none)
+                {
                     pt::ptree _jpload = inJSON.get_child("request");
-                    if (_jpload.get_child_optional("address") != boost::none &&
-                        _jpload.get_child_optional("amount") != boost::none) {
-                        string _taddress =  _jpload.get<string>("address");
-                        string _tamount =  _jpload.get<string>("amount");
-                        string _tpass = _jpload.get<string>("password");
-                        if (_taddress != "" && _tamount != "" && 
-                            !requirePassword || QString::fromStdString(_tpass) == wPassword) {
-                            qCritical() << "!!!!!!!!!!!!!!!! Transaction !!!!!!!!!!!!!!!!!!!!!";
-                            qCritical() << "Address: " << QString::fromStdString(_taddress);
-                            qCritical() << "Amount: " << QString::fromStdString(_tamount);
+                    if (_jpload.get_child_optional("type") != boost::none)
+                    {
+                        int rtype = _jpload.get<int>("type");
+                        switch (rtype)
+                        {
+                        case CreateTransaction:
+                            if (_jpload.get_child_optional("address") != boost::none &&
+                                _jpload.get_child_optional("amount") != boost::none)
+                            {
+                                string _taddress = _jpload.get<string>("address");
+                                string _tamount = _jpload.get<string>("amount");
+                                string _tpass = _jpload.get<string>("password");
+                                if (_taddress != "" && _tamount != "" &&
+                                        !requirePassword ||
+                                    QString::fromStdString(_tpass) == wPassword)
+                                {
+                                    qCritical() << "!!!!!!!!!!!!!!!! Transaction !!!!!!!!!!!!!!!!!!!!!";
+                                    qCritical() << "Address: " << QString::fromStdString(_taddress);
+                                    qCritical() << "Amount: " << QString::fromStdString(_tamount);
 
-                            // Destination address
-                            QVector<QString> destAddresses;
-                            destAddresses << QString::fromStdString(_taddress);
+                                    // Destination address
+                                    QVector<QString> destAddresses;
+                                    destAddresses << QString::fromStdString(_taddress);
 
-                            // Payment ID - Not used
-                            QString paymentId = "";
+                                    // Payment ID - Not used
+                                    QString paymentId = "";
 
-                            // Destination amounts
-                            QVector<QString> destAmounts;
-                            destAmounts << QString::fromStdString(_tamount);
+                                    // Destination amounts
+                                    QVector<QString> destAmounts;
+                                    destAmounts << QString::fromStdString(_tamount);
 
-                            // Mixin count = 10 (11 including self)
-                            quint32 mixinCount = 10;
+                                    // Mixin count = 10 (11 including self)
+                                    quint32 mixinCount = 10;
 
-                            // Priority - Automatic (0)
-                            PendingTransaction::Priority priority = PendingTransaction::Priority::Priority_Low;
-                            
-                            currentWallet->createTransactionAsync(
-                                destAddresses,
-                                paymentId,
-                                destAmounts,
-                                mixinCount,
-                                priority
-                            );
+                                    // Priority - Automatic (0)
+                                    PendingTransaction::Priority priority = PendingTransaction::Priority::Priority_Low;
+
+                                    currentWallet->createTransactionAsync(
+                                        destAddresses,
+                                        paymentId,
+                                        destAmounts,
+                                        mixinCount,
+                                        priority);
+                                }
+                            }
+                            break;
+                        case ListTxHistory:
+                            pt::ptree tx1;
+                            pt::ptree tx2;
+
+                            tx1.put("from", "Joe Bob");
+                            tx1.put("amount", "123");
+
+                            tx2.put("from", "Jane Doe");
+                            tx2.put("amount", "555.001");
+
+                            pt::ptree txs;
+
+                            txs.push_back(std::make_pair("", tx1));
+                            txs.push_back(std::make_pair("", tx2));
+
+                            outJSON.add_child("response", txs);
+                            break;
                         }
                     }
                 }
@@ -382,32 +429,38 @@ Q_INVOKABLE void WebWallet::start() {
                 /* End Set Current Parameters */
 
                 // Update UI
-                if(webwalletMenu != NULL) {
+                if (webwalletMenu != NULL)
+                {
                     QMetaObject::invokeMethod(webwalletMenu, "showConnected", Qt::QueuedConnection);
                 }
-
-            } else {
+            }
+            else
+            {
                 // qCritical() << "Key doesn't match" << QString::fromStdString(_jk) << "!=" << _k.toBase64();
                 return;
             }
 
             *response << "HTTP/1.1 200 OK\r\n"
-                << "Content-Type: application/octet-stream" << "\r\n"
-                << "Content-Length: " << payload.length() << "\r\n\r\n"
-                << payload;
-        } catch(const exception &e) {
+                      << "Content-Type: application/octet-stream"
+                      << "\r\n"
+                      << "Content-Length: " << payload.length() << "\r\n\r\n"
+                      << payload;
+        }
+        catch (const exception &e)
+        {
             qCritical() << "Bad request" << e.what();
             return;
         }
     };
 
-    server.resource["^/(.+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
-
+    server.resource["^/(.+)$"]["GET"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request)
+    {
         string s = request->path_match[1].str();
         // qCritical() << "GET Request: " << QString::fromStdString(s);
 
         // Check path root token against _p
-        if (s.substr(0, s.find("/")) != _p.toStdString()) {
+        if (s.substr(0, s.find("/")) != _p.toStdString())
+        {
             return;
         }
 
@@ -415,19 +468,21 @@ Q_INVOKABLE void WebWallet::start() {
         // qCritical() << QString::fromStdString(request->path_match[1].str());
 
         regex re("^/" + _p.toStdString());
-  
+
         string strPath = regex_replace(request->path, re, "/");
-        
-        try {
+
+        try
+        {
             auto web_root_path = boost::dll::program_location().parent_path();
             web_root_path /= "webwallet";
             auto path = boost::filesystem::canonical(web_root_path / strPath);
             bool isIndex = false;
             // Check if path is within web_root_path
-            if(distance(web_root_path.begin(), web_root_path.end()) > distance(path.begin(), path.end()) ||
-              !equal(web_root_path.begin(), web_root_path.end(), path.begin()))
-              throw invalid_argument("path must be within root path");
-            if(boost::filesystem::is_directory(path)) {
+            if (distance(web_root_path.begin(), web_root_path.end()) > distance(path.begin(), path.end()) ||
+                !equal(web_root_path.begin(), web_root_path.end(), path.begin()))
+                throw invalid_argument("path must be within root path");
+            if (boost::filesystem::is_directory(path))
+            {
                 path /= "index.html";
                 isIndex = true;
             }
@@ -439,83 +494,106 @@ Q_INVOKABLE void WebWallet::start() {
             auto ifs = make_shared<ifstream>();
             ifs->open(path.string(), ifstream::in | ios::binary | ios::ate);
 
-            if(*ifs) {
+            if (*ifs)
+            {
                 auto length = ifs->tellg();
                 ifs->seekg(0, ios::beg);
 
                 header.emplace("Content-Length", to_string(length));
-                if (!isIndex) {
+                if (!isIndex)
+                {
                     header.emplace("Cache-Control", "max-age=30672000");
                 }
-                
+
                 string ext = s.substr(s.find_last_of(".") + 1);
-                if (ext == "svg") {
+                if (ext == "svg")
+                {
                     header.emplace("Content-Type", "image/svg+xml");
-                } else if (ext == "png") {
+                }
+                else if (ext == "png")
+                {
                     header.emplace("Content-Type", "image/png");
-                } else if (ext == "js") {
+                }
+                else if (ext == "js")
+                {
                     header.emplace("Content-Type", "text/javascript");
-                } else if (ext == "html") {
+                }
+                else if (ext == "html")
+                {
                     header.emplace("Content-Type", "text/html");
-                } else if (ext == "css") {
+                }
+                else if (ext == "css")
+                {
                     header.emplace("Content-Type", "text/css");
-                } else if (ext == "css") {
+                }
+                else if (ext == "css")
+                {
                     header.emplace("Content-Type", "text/css");
-                } else if (ext == "txt") {
+                }
+                else if (ext == "txt")
+                {
                     header.emplace("Content-Type", "text/plain");
                 }
                 response->write(header);
-                
+
                 WebWalletFileServer::read_and_send(response, ifs);
-            } else {
+            }
+            else
+            {
                 throw invalid_argument("could not read file");
             }
-        } catch(const exception &e) {
+        }
+        catch (const exception &e)
+        {
             response->write(SimpleWeb::StatusCode::client_error_bad_request, "Could not open path " + request->path + ". " + e.what());
         }
     };
 
-    server.on_error = [](shared_ptr<HttpServer::Request> /*request*/, const SimpleWeb::error_code & /*ec*/) {
+    server.on_error = [](shared_ptr<HttpServer::Request> /*request*/, const SimpleWeb::error_code & /*ec*/)
+    {
         // Handle errors here
         // Note that connection timeouts will also call this handle with ec set to SimpleWeb::errc::operation_canceled
     };
 
-    server_thread = std::thread([]() {
+    server_thread = std::thread([]()
+                                {
         // Start server
         server.start([](unsigned short port) {
             started = true;
             starting = false;
             qInfo() << "Web wallet: Started";
-        });
-    });
+        }); });
 }
 
 // stop - Stops the web wallet api
-Q_INVOKABLE void WebWallet::stop() {
+Q_INVOKABLE void WebWallet::stop()
+{
     qInfo() << "Web wallet: Stopping";
 
-    if (!started || starting) {
+    if (!started || starting)
+    {
         return;
     }
     started = false;
     starting = false;
     server.stop();
     server_thread.detach();
-    
+
     qInfo() << "Web wallet: Stopped";
 }
 
 // getPort - Returns randomly selected port number within a range
-Q_INVOKABLE int WebWallet::getPort(int portStart, int portEnd) {
-    if(portStart < 49152)
+Q_INVOKABLE int WebWallet::getPort(int portStart, int portEnd)
+{
+    if (portStart < 49152)
         portStart = 49152;
-    if(portEnd < 49152)
+    if (portEnd < 49152)
         portEnd = 49152;
-    if(portStart > 65535)
+    if (portStart > 65535)
         portStart = 65535;
-    if(portEnd > 65535)
+    if (portEnd > 65535)
         portEnd = 65535;
-    if(portEnd < portStart)
+    if (portEnd < portStart)
         portEnd = portStart;
     portNumberRangeStart = portStart;
     portNumberRange = portEnd - portStart + 1;
@@ -532,28 +610,33 @@ Q_INVOKABLE int WebWallet::getPort(int portStart, int portEnd) {
 }
 
 // getPublicIPJSON - Client request to get public IP
-Q_INVOKABLE QString WebWallet::getPublicIPJSON() {
+Q_INVOKABLE QString WebWallet::getPublicIPJSON()
+{
 
     // Return cached IP if already retrieved
-    if (QString::compare(strIP, "", Qt::CaseInsensitive) != 0) {
+    if (QString::compare(strIP, "", Qt::CaseInsensitive) != 0)
+    {
         return strIP;
     }
-    
+
     // Try until IP is found
     int retries = serverURLs.size();
-    while (retries-- > 0 && QString::compare(strIP, "", Qt::CaseInsensitive) == 0) {
+    while (retries-- > 0 && QString::compare(strIP, "", Qt::CaseInsensitive) == 0)
+    {
         int randIndex = randIP(rng);
         auto sURL = serverURLs.begin();
         std::advance(sURL, randIndex);
-        vector<string> serverURL = vector<string> (*sURL);
+        vector<string> serverURL = vector<string>(*sURL);
         qInfo() << "Web wallet: Fetching public IP from:" << serverURL[0].c_str();
         HttpsClient client(serverURL[0], false);
-        try {
+        try
+        {
             auto r1 = client.request("GET", serverURL[1]);
             strIP = QString::fromStdString(r1->content.string());
-            
+
             regex ipre("^\\d+\\.\\d+\\.\\d+\\.\\d+$");
-            if (!regex_match(strIP.toStdString(), ipre)) {
+            if (!regex_match(strIP.toStdString(), ipre))
+            {
                 qCritical() << "Web wallet: IP parse error: " << serverURL[0].c_str() << ": " << strIP;
                 strIP = "";
                 continue;
@@ -561,22 +644,25 @@ Q_INVOKABLE QString WebWallet::getPublicIPJSON() {
 
             qInfo() << "Web wallet: Fetched public IP:" << strIP;
             break;
-        } catch (const SimpleWeb::system_error &e) {
+        }
+        catch (const SimpleWeb::system_error &e)
+        {
             // Continue to the next URL
         }
     }
 
-    if (QString::compare(strIP, "", Qt::CaseInsensitive) == 0) {
+    if (QString::compare(strIP, "", Qt::CaseInsensitive) == 0)
+    {
         qWarning() << "Web wallet: Fetch public IP failed. Please check your internet connection or the server host list. Using localhost instead.";
         strIP = "localhost";
     }
 
     return strIP;
-
 }
 
 // refresh - Refresh server url path and keys
-Q_INVOKABLE void WebWallet::refresh() {
+Q_INVOKABLE void WebWallet::refresh()
+{
 
     pt::ptree outJSON;
 
@@ -586,7 +672,7 @@ Q_INVOKABLE void WebWallet::refresh() {
     _ap = _p;
     _k = QCryptographicHash::hash(_ps.toUtf8(), QCryptographicHash::Sha256);
     _iv = QCryptographicHash::hash(_ps.toUtf8(), QCryptographicHash::Md5);
-    
+
     QByteArray _ivps = QCryptographicHash::hash((_iv.toHex() + _ps).toUtf8(), QCryptographicHash::Md5);
 
     outJSON.put("k", _k.toHex().toStdString());
@@ -604,13 +690,14 @@ Q_INVOKABLE void WebWallet::refresh() {
 
     QString decodedString = QString(encryption.removePadding(decodeBytes));
 
-    if(webwalletMenu != NULL) {
+    if (webwalletMenu != NULL)
+    {
         // Reset key change flag
         webwalletMenu->setProperty("keysChanged", false);
     }
 
     // Debugging information
-    //string estrJSON = encryption.encode(QString::fromStdString(strJSON).toUtf8(), _k, _ivps).toBase64().toStdString();
+    // string estrJSON = encryption.encode(QString::fromStdString(strJSON).toUtf8(), _k, _ivps).toBase64().toStdString();
     // qCritical() << "PS - Pairing string: " << _ps << Qt::endl;
     // qCritical() << "P - Path: " << _p << Qt::endl;
     // qCritical() << "K - key: " << _k.toHex() << Qt::endl;
@@ -627,11 +714,13 @@ Q_INVOKABLE void WebWallet::refresh() {
 }
 
 // run - Syncs the shared variables between the webwallet engine and the QML frontend and returns the app URL
-Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName, QObject *wwMenu) {
-    if (useWallet != NULL) {
+Q_INVOKABLE QString WebWallet::run(Wallet *useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName, QObject *wwMenu)
+{
+    if (useWallet != NULL)
+    {
         currentWallet = useWallet;
     }
-    //qCritical() << "Web wallet running";
+    // qCritical() << "Web wallet running";
     webwalletMenu = wwMenu;
 
     requirePassword = passwordRequired;
@@ -639,18 +728,17 @@ Q_INVOKABLE QString WebWallet::run(Wallet * useWallet, bool passwordRequired, QS
     blackTheme = isBlackTheme;
     wName = walletName;
 
-
-    if (_p == "") {
+    if (_p == "")
+    {
         refresh();
     }
-
 
     QByteArray _ivps = QCryptographicHash::hash((_iv.toHex() + _ps).toUtf8(), QCryptographicHash::Md5);
     QByteArray encodeText = encryption.encode(_ps.toLocal8Bit(), _k, _ivps);
     return _p + "/#" + (isBlackTheme ? "1" : "0") + QString(encodeText.toBase64());
-
 }
 
-Q_INVOKABLE QString WebWallet::getPairingCode() {
+Q_INVOKABLE QString WebWallet::getPairingCode()
+{
     return QString(_ps);
 }

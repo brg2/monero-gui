@@ -40,7 +40,11 @@ export let isRecover = fullHash.slice(0, 1) == "?",
   reqPassword,
   pcLength = 6,
   walletName = "",
-  strRecoverHash;
+  strRecoverHash,
+  RequestTypes = {
+    CreateTransaction: 0,
+    ListTxHistory: 1,
+  };
 
 let encrypted = fullHash.substring(1),
   context = isRecover
@@ -125,7 +129,7 @@ function processPairCode() {
 }
 
 // postAPI - Make a ping or payload request to the server
-function postAPI(request) {
+export function postAPI(request, cb = null) {
   var jsonSend = { k: _k.toString() };
   if (request) {
     jsonSend.request = request;
@@ -162,6 +166,8 @@ function postAPI(request) {
       _iv = CryptoJS.enc.Hex.parse(jsonResponse.iv);
       _ivps = CryptoJS.MD5(CryptoJS.enc.Utf8.parse(jsonResponse.iv + _ps));
       _p = window.location.origin + "/" + jsonResponse.p;
+
+      options.iv = _ivps;
 
       let newReqPassword = jsonResponse.rp == "1";
       if (newReqPassword != reqPassword) {
@@ -203,8 +209,6 @@ function postAPI(request) {
 
       syncBlackTheme();
 
-      options.iv = _ivps;
-
       jsonResponse.ps = _ps;
 
       // Only save required parameters in recovery
@@ -212,9 +216,9 @@ function postAPI(request) {
         CryptoJS.enc.Utf8.parse(
           JSON.stringify({
             iv: jsonResponse.iv,
-            k: jsonResponse.k,
             p: jsonResponse.p,
             ps: jsonResponse.ps,
+            k: jsonResponse.k,
           })
         )
       );
@@ -230,6 +234,11 @@ function postAPI(request) {
       }
 
       pingTimeout = setTimeout(postAPI, 3000);
+
+      // Finally, use custom callback if supplied
+      if (jsonResponse.response && cb != null) {
+        cb(jsonResponse.response);
+      }
     },
     error: errHandler,
     complete() {
@@ -267,8 +276,8 @@ function errHandler(e) {
   }
 }
 
-// postAPIInputs - Collect the input values in order to make a payload request to the api
-export const postAPIInputs = () => {
+// createTransaction - Collect the input values in order to make a payload request to the api
+export const createTransaction = () => {
   let address = $("#address").val();
   let amount = $("#amount").val();
   if (!address) return alert("Please enter an address");
@@ -285,6 +294,7 @@ export const postAPIInputs = () => {
   )
     return;
   postAPI({
+    type: RequestTypes.CreateTransaction,
     address: $("#address").val(),
     amount: $("#amount").val(),
     password: $("#password").val(),
@@ -331,6 +341,7 @@ export const useBalance = () => {
 
 // showSelfQR - Display the qr code of the wallet address
 export const showSelfQR = () => {
+  index.data.showTxHistory = false;
   index.data.showSelfQR = true;
 };
 
