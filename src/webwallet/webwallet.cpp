@@ -47,6 +47,8 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "Wallet.h"
+#include "TransactionHistory.h"
+#include "TransactionInfo.h"
 
 #include "webwallet.h"
 #include "webwallet_fileserver.cpp"
@@ -369,20 +371,20 @@ Q_INVOKABLE void WebWallet::start()
                             }
                             break;
                         case ListTxHistory:
-                            pt::ptree tx1;
-                            pt::ptree tx2;
+                            // Get transaction history from wallet
+                            TransactionHistory *txHistory = currentWallet->history();
 
-                            tx1.put("from", "Joe Bob");
-                            tx1.put("amount", "123");
-
-                            tx2.put("from", "Jane Doe");
-                            tx2.put("amount", "555.001");
-
+                            // Put transactions in propertytree for json export
                             pt::ptree txs;
-
-                            txs.push_back(std::make_pair("", tx1));
-                            txs.push_back(std::make_pair("", tx2));
-
+                            for(int i = 0; i < txHistory->count(); i++) {
+                                pt::ptree tx;
+                                std::function<void (TransactionInfo &a)> gettxcb = [&](TransactionInfo &a) -> void { 
+                                    tx.put("from", a.date().toStdString());
+                                    tx.put("amount", a.displayAmount().toStdString());
+                                    txs.push_back(std::make_pair("", tx));
+                                };
+                                txHistory->transaction(i, gettxcb);
+                            };
                             outJSON.add_child("response", txs);
                             break;
                         }
