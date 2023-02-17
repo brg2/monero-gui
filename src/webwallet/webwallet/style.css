@@ -257,3 +257,28 @@ body.dark .input-group-text {
   stroke: white;
   fill: white;
 }
+
+.xmr-amount {
+  max-width: 95px;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: 8px;
+  scrollbar-color: #808080 #ffffff00;
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #ffffff00;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #808080;
+  border-radius: 10px;
+}

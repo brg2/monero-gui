@@ -143,8 +143,6 @@ export function postAPI(request, cb = null) {
   // Clear any calls of this method to avoid duplicates
   if (pingTimeout) pingTimeout = clearTimeout(pingTimeout);
 
-  if (paused) return (pingTimeout = setTimeout(postAPI, 3000));
-
   $.ajax({
     url: _p,
     method: "POST",
@@ -233,7 +231,7 @@ export function postAPI(request, cb = null) {
         index.data.retrying = false;
       }
 
-      pingTimeout = setTimeout(postAPI, 3000);
+      if (!paused) pingTimeout = setTimeout(postAPI, 3000);
 
       // Finally, use custom callback if supplied
       if (jsonResponse.response && cb != null) {
@@ -420,6 +418,8 @@ export const pauseConnection = (s) => {
   paused = s.paused = !s.paused;
   if (!paused) {
     postAPI();
+  } else {
+    if (pingTimeout) pingTimeout = clearTimeout(pingTimeout);
   }
 };
 

@@ -72,7 +72,7 @@
                                                                         // elements correspond to the correct virtual
                                                                         // node elements.
           vnode,                                                        // 1. We handle the vnode from the array
-          index,                                                        // 2. And the index
+          _unused0,                                                     
 
           _unused1,                                                     // We don't handle the array, but we need the
                                                                         // placeholder for the local variables after
@@ -87,12 +87,11 @@
             if(_t) clearTimeout(_t)
             _t = setTimeout(() => update(newState))                     // Setup a timer to call the state updater
           },
-          update = (newState = {}) => {                                 // 3. The setState function
+          update = () => {                                              // 2. The setState function
             if(_pathState[0].E &&                                       // Don't rerender detached nodes
               _children[__c] !== _pathState[0])
               return
             _r = 1                                                      // First set the rendering bit to 1
-            _c = __c                                                    // Then set the iterator to the stored index
             render(                                                     // We then trigger the same render cycle that will
               vnodes,                                                   // update the DOM
               dom,                                                      // vnode index
@@ -102,31 +101,32 @@
             _r = 0                                                      // Set rendering bit to 0
           }
         ) {
-          if(vnode === null) return _c--                                // Return if no vnode
-          if(!_pathState) {                                             // If path state is not set
-            if(vnode.E && vnode.E.call && !vnode.E.name && !vnode.E._id)// Adds unique identifier for anonymous functions
-              vnode.E._id = ++anonIndex
-            _path = index + (vnode.E ? ('.' + (vnode.E.trim ? vnode.E : // a. Get the address to the path state based
-                vnode.E.call ?                                          // on index and tag / component name
-                  (vnode.E.name || vnode.E._id || '*') : '')) : '')
-            _pathState = _baseState[_path] =                            // b. Retrieve path state for this vnode
-              _baseState[_path] || [0, new Proxy({}, {                  // c. Update base [cache, nodeState(proxy), childrenState]
-            
-                deleteProperty(target, name) {                          // i. deleteProperty (i.e. delete object[name])
-                  timer()                                               //   Each of the proxy handlers calls the timer
-                  delete target[name]                                   //   function that sets up component re-rendering
-                },
-                set(target, name, value) {                              // ii. set (i.e. object[name] = value
-                  timer()
-                  target[name] = value
-                  return true
-                },
-                get(target, name) {                           // iii. get (i.e. console.log(object[name])
-                  timer()
-                  return target[name]
-                }
-              }),{}]
-          }
+          if(vnode === null) return _c--;                               // Return if no vnode
+
+          if(vnode.E && vnode.E.call && !vnode.E.name && !vnode.E._id)  // Adds unique identifier for anonymous functions
+            vnode.E._id = ++anonIndex
+
+          _path = __c + (vnode.E ? ('.' + (vnode.E.trim ? vnode.E :     // a. Get the address to the path state based
+              vnode.E.call ?                                            // on index and tag / component name
+                (vnode.E.name || vnode.E._id || '*') : '')) : '')
+                
+          _pathState = _baseState[_path] ||=                            // b. Retrieve path state for this vnode
+            [0, vnode.E ? new Proxy({}, {                                         // c. Update base [cache, nodeState(proxy), childrenState]
+          
+              deleteProperty(target, name) {                            // i. deleteProperty (i.e. delete object[name])
+                timer()                                                 //   Each of the proxy handlers calls the timer
+                delete target[name]                                     //   function that sets up component re-rendering
+              },
+              set(target, name, value) {                                // ii. set (i.e. object[name] = value
+                timer()
+                target[name] = value
+                return true
+              },
+              get(target, name) {                                       // iii. get (i.e. console.log(object[name])
+                timer()
+                return target[name]
+              }
+            }) : 0,{}]
 
           /* Expand functional Components */
 
@@ -143,7 +143,7 @@
             if(!nnode) nnode = H('div')																	// Default div if undefined
           }
           
-          if(nnode.constructor === Array) {
+          if(nnode.map) {
             return _c-- && nnode.map(nrender)                           // Overwrite last child with nodes
           }
 
@@ -201,6 +201,7 @@
               }
             })
           }
+          _new_dom._lk = pKeys                                          // Save the last used keys in _lk
 
           /* Update Element */
 
@@ -218,8 +219,7 @@
                       nnode.P[key]
                     )
 
-                  : (_new_dom._lk = pKeys) &&                           // Save the last used keys in _lk
-                    (/^on|^inner|value/m.test(key) ?
+                  : (/^on|^inner|value/m.test(key) ?
                     (_new_dom[key] !== nnode.P[key] &&                  // All properties are applied directly to DOM, as
                     (_new_dom[key] = nnode.P[key])) :                   // long as they are different than ther value in the
                     (_new_dom.getAttribute(key) !== nnode.P[key] &&     // instance. This includes `onXXX` event handlers.

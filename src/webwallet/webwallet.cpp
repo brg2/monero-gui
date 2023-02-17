@@ -376,11 +376,15 @@ Q_INVOKABLE void WebWallet::start()
 
                             // Put transactions in propertytree for json export
                             pt::ptree txs;
-                            for(int i = 0; i < txHistory->count(); i++) {
+                            for (int i = 0; i < txHistory->count(); i++)
+                            {
                                 pt::ptree tx;
-                                std::function<void (TransactionInfo &a)> gettxcb = [&](TransactionInfo &a) -> void { 
-                                    tx.put("from", a.date().toStdString());
+                                std::function<void(TransactionInfo & a)> gettxcb = [&](TransactionInfo &a) -> void
+                                {
+                                    tx.put("unixtime", a.timestamp().toMSecsSinceEpoch());
                                     tx.put("amount", a.displayAmount().toStdString());
+                                    tx.put("id", a.hash().toStdString());
+                                    tx.put("dir", a.direction());
                                     txs.push_back(std::make_pair("", tx));
                                 };
                                 txHistory->transaction(i, gettxcb);

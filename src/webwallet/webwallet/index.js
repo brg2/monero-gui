@@ -31,6 +31,11 @@ import * as app from "./app.js";
 // Namespace some element types
 const { button, div, i, img, input, span } = H;
 
+const TxDirection = {
+  In: 0,
+  Out: 1,
+};
+
 // index - The root of WebWallet
 export const index = (p, s) => {
   setTimeout(() => {
@@ -134,7 +139,12 @@ export const index = (p, s) => {
                 {
                   id: "listTxHistory",
                   title: "List transaction history",
-                  onclick: () => (s.showTxHistory = true),
+                  onclick: () =>
+                    s.showTxHistory
+                      ? // If already visible, then refresh tx list
+                        (ListTxHistory.data.txList = null)
+                      : // Show history
+                        (s.showTxHistory = true),
                 },
                 i.bi["bi-list-ul"]()
               ),
@@ -149,7 +159,14 @@ export const index = (p, s) => {
             ]),
             s.showTxHistory
               ? div(
-                  { style: { height: "320px", marginTop: "20px" } },
+                  {
+                    style: {
+                      height: "320px",
+                      width: "100%",
+                      marginTop: "20px",
+                      overflow: "auto",
+                    },
+                  },
                   H(ListTxHistory)
                 )
               : div[s.showSelfQR ? "" : "blur"]({
@@ -225,8 +242,54 @@ function ListTxHistory(p, s) {
       }
     );
   return !s.txList
-    ? div({}, "Loading...")
+    ? "Loading..."
     : !s.txList.length
-    ? div({}, "No transactions")
-    : s.txList.map((t) => div({}, `${t.amount} from ${t.from}`));
+    ? "No transactions"
+    : div["container-fluid"](
+        {},
+        s.txList
+          .slice()
+          .reverse()
+          .map((t, ix) => {
+            const d = moment(parseInt(t.unixtime)),
+              amt = app.formatter.format(t.amount),
+              isSend = t.dir == TxDirection.Out;
+            return [
+              div.row(
+                {
+                  title: `${t.id} - ${
+                    isSend ? "Sent" : "Received"
+                  } ${amt} XMR on ${d.format("MM/DD/YY")} at ${d.format(
+                    "h:mma"
+                  )}`,
+                },
+                div["col-md-7"](
+                  {
+                    onclick() {
+                      s.detailIx = s.detailIx == ix ? -1 : ix;
+                    },
+                  },
+                  i.bi[`bi-${isSend ? "upload" : "download"}`]({
+                    title: isSend ? "Sent" : "Received",
+                  }),
+                  ` `,
+                  span["xmr-amount"]["d-inline-block"]["align-bottom"][
+                    "text-truncate"
+                  ]({ title: `${amt} XMR` }, amt),
+                  ` XMR`
+                ),
+                div["col-md-5"]["text-end"]({}, `${d.format("MMM D, YYYY")}`)
+              ),
+              s.detailIx == ix
+                ? div.row({}, div["text-truncate"]({}, `${t.id}`))
+                : null,
+            ];
+          })
+      );
 }
+
+/*
+
+*/
+
+window.txHistory = ListTxHistory;
