@@ -337,17 +337,6 @@ export const useBalance = () => {
   if (balance && !isNaN(balance)) $("#amount").val(balance);
 };
 
-// showSelfQR - Display the qr code of the wallet address
-export const showSelfQR = () => {
-  index.data.showTxHistory = false;
-  index.data.showSelfQR = true;
-};
-
-// hideSelfQR - Hide the wallet address qr code
-export const hideSelfQR = () => {
-  index.data.showSelfQR = false;
-};
-
 // pcInputEnter - Enter the character into the pairing code inputs
 export const pcInputEnter = (character) => {
   if (!character) return;

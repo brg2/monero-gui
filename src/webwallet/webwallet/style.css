@@ -133,7 +133,6 @@ body.dark .form-control::placeholder {
 #qrcode {
   width: 320px;
   height: 320px;
-  margin-top: 20px;
   cursor: pointer;
   transition: filter ease 0.5s;
 }

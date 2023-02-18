@@ -110,24 +110,22 @@ export const index = (p, s) => {
                   }),
                 ])
               : null,
-            div["mb-2"]["w-100"]["d-flex"]["justify-content-between"]({}, [
+            div["mb-4"]["w-100"]["d-flex"]["justify-content-between"]({}, [
               button.btn["btn-secondary"](
                 { title: "Reset inputs", onclick: app.clearInputs },
                 "Reset"
               ),
-              button.btn["btn-secondary"](
+              button.btn["btn-secondary"][
+                s.show == "SelfQR" ? "btn-light" : ""
+              ](
                 {
                   id: "toggleSelfQRButton",
                   title: "Show/hide self address",
-                  ondblclick: app.showSelfQR,
-                  onmousedown: app.showSelfQR,
-                  onmouseup: app.hideSelfQR,
-                  ontouchstart: app.showSelfQR,
-                  ontouchend: app.hideSelfQR,
+                  onclick: () => (s.show = s.show == "SelfQR" ? "" : "SelfQR"),
                 },
                 i.bi["bi-qr-code"]()
               ),
-              button.btn["btn-secondary"](
+              button.btn["btn-secondary"][s.paused ? "btn-light" : ""](
                 {
                   id: "togglePauseResume",
                   title: (s.paused ? "Resume" : "Pause") + " connection",
@@ -135,16 +133,14 @@ export const index = (p, s) => {
                 },
                 s.paused ? i.bi["bi-play-fill"]() : i.bi["bi-pause-fill"]()
               ),
-              button.btn["btn-secondary"](
+              button.btn["btn-secondary"][
+                s.show == "TxHistory" ? "btn-light" : ""
+              ](
                 {
                   id: "listTxHistory",
                   title: "List transaction history",
                   onclick: () =>
-                    s.showTxHistory
-                      ? // If already visible, then refresh tx list
-                        (ListTxHistory.data.txList = null)
-                      : // Show history
-                        (s.showTxHistory = true),
+                    (s.show = s.show == "TxHistory" ? "" : "TxHistory"),
                 },
                 i.bi["bi-list-ul"]()
               ),
@@ -157,23 +153,24 @@ export const index = (p, s) => {
                 "Send"
               ),
             ]),
-            s.showTxHistory
+            s.show == "TxHistory"
               ? div(
                   {
                     style: {
                       height: "320px",
                       width: "100%",
-                      marginTop: "20px",
                       overflow: "auto",
                     },
                   },
                   H(ListTxHistory)
                 )
-              : div[s.showSelfQR ? "" : "blur"]({
+              : s.show == "SelfQR"
+              ? div({
                   id: "qrcode",
                   onclick: () => app.selectSelfAddress("selfaddress"),
                   innerHTML: app.qrcode,
-                }),
+                })
+              : div({ style: { height: "320px" } }),
           ]
         : [
             // Pairing
