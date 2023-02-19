@@ -246,6 +246,9 @@ function ListTxHistory(p, s) {
         {},
         s.txList
           .slice()
+          .sort((a, b) => {
+            return parseInt(a.unixtime) - parseInt(b.unixtime);
+          })
           .reverse()
           .map((t, ix) => {
             const d = moment(parseInt(t.unixtime)),
@@ -260,7 +263,7 @@ function ListTxHistory(p, s) {
                     "h:mma"
                   )}`,
                 },
-                div["col-md-7"](
+                div["col-7"](
                   {
                     onclick() {
                       s.detailIx = s.detailIx == ix ? -1 : ix;
@@ -275,7 +278,7 @@ function ListTxHistory(p, s) {
                   ]({ title: `${amt} XMR` }, amt),
                   ` XMR`
                 ),
-                div["col-md-5"]["text-end"]({}, `${d.format("MMM D, YYYY")}`)
+                div["col-5"]["text-end"]({}, `${d.format("MMM D, YYYY")}`)
               ),
               s.detailIx == ix
                 ? div.row({}, div["text-truncate"]({}, `${t.id}`))
