@@ -62,8 +62,6 @@ export const index = (p, s) => {
                 img({
                   id: "moneroLogo",
                   src: "monero.svg",
-                  // onclick: () =>
-                  //   toasts.add({ msg: "test", type: ToastType.Success }),
                 }),
                 div({ id: "moneroTitle" }, "Monero")
               ),
