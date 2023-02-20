@@ -71,7 +71,13 @@ export const index = (p, s) => {
                 value: "",
               }),
               button.btn["btn-outline-secondary"]["x-clear"](
-                { title: "Clear address", onclick: app.clearAddress },
+                {
+                  title: "Clear address",
+                  onclick() {
+                    app.clearAddress();
+                    $("#address")[0]?.focus();
+                  },
+                },
                 "×"
               ),
               button.btn["btn-outline-secondary"](
@@ -85,7 +91,13 @@ export const index = (p, s) => {
                 placeholder: "Amount",
               }),
               button.btn["btn-outline-secondary"]["x-clear"](
-                { title: "Clear amount", onclick: app.clearAmount },
+                {
+                  title: "Clear amount",
+                  onclick() {
+                    app.clearAmount();
+                    $("#amount")[0]?.focus();
+                  },
+                },
                 "×"
               ),
               button.btn["btn-outline-secondary"](
@@ -102,13 +114,27 @@ export const index = (p, s) => {
               ),
             ]),
             s.reqPassword
-              ? div["mb-2"]["w-100"]({ id: "password-container" }, [
-                  input["form-control"]["form-control-lg"]({
-                    id: "password",
-                    type: "password",
-                    placeholder: "Password",
-                  }),
-                ])
+              ? div["mb-2"]["w-100"](
+                  { id: "password-container" },
+                  div["input-group"](
+                    {},
+                    input["form-control"]["form-control-lg"]({
+                      id: "password",
+                      type: "password",
+                      placeholder: "Password",
+                    }),
+                    button.btn["btn-outline-secondary"]["x-clear"](
+                      {
+                        title: "Clear password",
+                        onclick() {
+                          app.clearPassword();
+                          $("#password")[0]?.focus();
+                        },
+                      },
+                      "×"
+                    )
+                  )
+                )
               : null,
             div["mb-4"]["w-100"]["d-flex"]["justify-content-between"]({}, [
               button.btn["btn-secondary"](
@@ -228,14 +254,15 @@ export const index = (p, s) => {
   ];
 };
 
-function ListTxHistory(p, s) {
-  if (!s.txList)
+export const ListTxHistory = (p, s) => {
+  if (!s.txList || s.sync)
     app.postAPI(
       {
         type: app.RequestTypes.ListTxHistory,
       },
       (txs) => {
         s.txList = txs;
+        s.sync = false;
       }
     );
   return !s.txList
@@ -251,20 +278,40 @@ function ListTxHistory(p, s) {
           })
           .reverse()
           .map((t, ix) => {
-            const d = moment(parseInt(t.unixtime)),
+            const ut = parseInt(t.unixtime),
+              d = moment(ut),
               amt = app.formatter.format(t.amount),
-              isSend = t.dir == TxDirection.Out;
+              isSend = t.dir == TxDirection.Out,
+              age = moment().valueOf() - ut,
+              tto = 150000 - age; // Time to old (2.5 minutes)
+
+            s.isNew = tto > 0;
+
+            if (s.isNew) {
+              setTimeout(() => {
+                s.isNew = false;
+              }, tto);
+            }
             return [
-              div.row(
+              div.row["flex-nowrap"]["mb-1"]["p-1"]["rounded"][
+                s.isNew ? "bg-success" : s.hoverIx == ix ? "bg-secondary" : ""
+              ](
                 {
                   title: `${t.id} - ${
                     isSend ? "Sent" : "Received"
                   } ${amt} XMR on ${d.format("MM/DD/YY")} at ${d.format(
                     "h:mma"
                   )}`,
+                  onmouseover() {
+                    s.hoverIx = ix;
+                  },
+                  onmouseout() {
+                    s.hoverIx = -1;
+                  },
                 },
-                div["col-7"](
+                div["col"](
                   {
+                    role: "button",
                     onclick() {
                       s.detailIx = s.detailIx == ix ? -1 : ix;
                     },
@@ -278,7 +325,7 @@ function ListTxHistory(p, s) {
                   ]({ title: `${amt} XMR` }, amt),
                   ` XMR`
                 ),
-                div["col-5"]["text-end"]({}, `${d.format("MMM D, YYYY")}`)
+                div["col-auto"]["text-end"]({}, `${d.format("MMM D, YYYY")}`)
               ),
               s.detailIx == ix
                 ? div.row({}, div["text-truncate"]({}, `${t.id}`))
@@ -286,7 +333,7 @@ function ListTxHistory(p, s) {
             ];
           })
       );
-}
+};
 
 /*
 

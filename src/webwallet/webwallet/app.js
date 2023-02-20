@@ -26,7 +26,7 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import { index } from "./index.js";
+import { index, ListTxHistory } from "./index.js";
 
 export const formatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
@@ -177,6 +177,12 @@ export function postAPI(request, cb = null) {
 
       let newbalance = jsonResponse.bal / 1000000000000;
       if (newbalance != balance) {
+        // Show new transaction notification if balance not synced already
+        if (balance != undefined) {
+          // Update tx history if already fetched
+          if (ListTxHistory.data.txList) ListTxHistory.data.sync = true;
+          toastr.info("A new transaction has been processed");
+        }
         balance = newbalance;
         index.data.balance = balance;
       }
@@ -278,9 +284,10 @@ function errHandler(e) {
 export const createTransaction = () => {
   let address = $("#address").val();
   let amount = $("#amount").val();
+  let password = $("#password").val() || "";
   if (!address) return alert("Please enter an address");
   if (!amount) return alert("Please enter an amount");
-  if (reqPassword && !$("#password")) return alert("Please enter a password");
+  if (reqPassword && !password) return alert("Please enter a password");
   if (
     !confirm(
       "Sending " +
@@ -293,10 +300,12 @@ export const createTransaction = () => {
     return;
   postAPI({
     type: RequestTypes.CreateTransaction,
-    address: $("#address").val(),
-    amount: $("#amount").val(),
-    password: $("#password").val(),
+    address: address,
+    amount: amount,
+    password: password,
   });
+
+  clearInputs();
 };
 
 // clearInputs - Clear the input values
@@ -317,9 +326,9 @@ export const clearAmount = () => {
 };
 
 // clearPassword - Clear the password input
-function clearPassword() {
+export const clearPassword = () => {
   $("#password").val("");
-}
+};
 
 // scanQR - Redirect to a qr code reader that will return the address
 export const scanQR = () => {
