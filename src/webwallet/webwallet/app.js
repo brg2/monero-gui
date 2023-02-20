@@ -26,7 +26,7 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import { index, ListTxHistory } from "./index.js";
+import { index, ListTxHistory, toasts } from "./index.js";
 
 export const formatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
@@ -180,8 +180,11 @@ export function postAPI(request, cb = null) {
         // Show new transaction notification if balance not synced already
         if (balance != undefined) {
           // Update tx history if already fetched
-          if (ListTxHistory.data.txList) ListTxHistory.data.sync = true;
-          toastr.info("A new transaction has been processed");
+          if (ListTxHistory.data?.txList) ListTxHistory.data.sync = true;
+          toasts.add({
+            msg: "A new transaction has been processed",
+            type: toasts.ToastTypes.Success,
+          });
         }
         balance = newbalance;
         index.data.balance = balance;

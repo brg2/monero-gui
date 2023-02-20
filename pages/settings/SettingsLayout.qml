@@ -452,7 +452,7 @@ Rectangle {
                                 webwalletMenu.a = !webwalletMenu.a
                             }
 
-                            if(webwalletMenu.connected || webwalletMenu.keysChanged) {
+                            if(webwalletMenu.connected) {
                                 // Show confirmation dialog
                                 confirmationDialog.title = qsTr("Web wallet is connected") + translationManager.emptyString;
                                 confirmationDialog.text  = qsTr("Are you sure you want to stop the current web wallet connection?") + translationManager.emptyString;

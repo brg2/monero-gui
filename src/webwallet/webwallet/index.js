@@ -29,9 +29,9 @@
 import * as app from "./app.js";
 
 // Namespace some element types
-const { button, div, i, img, input, span } = H;
+const { button, div, i, img, input, small, span, strong } = H;
 
-const TxDirection = {
+export const TxDirection = {
   In: 0,
   Out: 1,
 };
@@ -59,7 +59,12 @@ export const index = (p, s) => {
               div.spacer(),
               div["d-flex"]["flex-row"]["align-items-center"](
                 {},
-                img({ id: "moneroLogo", src: "monero.svg" }),
+                img({
+                  id: "moneroLogo",
+                  src: "monero.svg",
+                  // onclick: () =>
+                  //   toasts.add({ msg: "test", type: ToastType.Success }),
+                }),
                 div({ id: "moneroTitle" }, "Monero")
               ),
               div.spacer()
@@ -251,6 +256,7 @@ export const index = (p, s) => {
           "reconnecting..."
         )
       : null,
+    H(Toasts),
   ];
 };
 
@@ -335,8 +341,43 @@ export const ListTxHistory = (p, s) => {
       );
 };
 
-/*
+const Toasts = (p, s) => {
+  s.list ||= [];
+  return div["toast-container"]["position-absolute"]["top-0"]["end-0"]["p-3"](
+    {},
+    s.list.map((tst, ix) => {
+      return div["toast"]["show"]["align-items-center"]["text-white"][
+        ["bg-info", "bg-success", "bg-danger"][tst.type]
+      ](
+        {},
+        div["d-flex"](
+          {},
+          div["toast-body"]({}, tst.msg),
+          button["btn-close"]["btn-close-white"]["me-2"]["m-auto"]({
+            type: "button",
+            onclick() {
+              s.list.splice(ix, 1);
+            },
+          })
+        )
+      );
+    })
+  );
+};
 
-*/
-
-window.txHistory = ListTxHistory;
+export const toasts = {
+  add(tst = {}) {
+    let ix = Toasts.data.list.push(tst) - 1;
+    setTimeout(() => this.remove(ix), 5000);
+  },
+  remove(ix) {
+    const len = Toasts.data.list.length;
+    ix = ix >= len ? len - 1 : ix;
+    Toasts.data.list.splice(ix, 1);
+  },
+  ToastTypes: {
+    Info: 0,
+    Success: 1,
+    Error: 2,
+  },
+};

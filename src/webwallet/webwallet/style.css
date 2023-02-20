@@ -44,6 +44,9 @@ body.loaded {
 
 body.dark {
   background-color: #1b1b1b;
+}
+
+body.dark #index {
   color: white;
 }
 
