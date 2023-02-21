@@ -66,7 +66,7 @@ let encrypted = fullHash.substring(1),
   _jk,
   pingTimeout,
   connected = false,
-  blackTheme = isRecover ? null : fullHash.slice(0, 1) == "1",
+  // blackTheme = ,
   balance,
   retrying = false,
   paused = false,
@@ -76,8 +76,7 @@ export let address = isRecover && context.address ? context.address : "";
 
 // app - Initialize the app
 export const app = () => {
-  syncBlackTheme();
-
+  index.data.blackTheme = fullHash.slice(0, 1) == "1";
   if (!isRecover) return clearPairingCode();
   _ps = context.ps;
   _k = CryptoJS.enc.Hex.parse(context.k);
@@ -173,7 +172,8 @@ export function postAPI(request, cb = null) {
         index.data.reqPassword = reqPassword;
       }
 
-      blackTheme = jsonResponse.bt == "1";
+      if (jsonResponse.bt != lastResponse.bt)
+        index.data.blackTheme = jsonResponse.bt == "1";
 
       let newbalance = jsonResponse.bal / 1000000000000;
       if (newbalance != balance) {
@@ -213,8 +213,6 @@ export function postAPI(request, cb = null) {
       ) {
         index.data.subaddrs = jsonResponse.subaddrs;
       }
-
-      syncBlackTheme();
 
       jsonResponse.ps = _ps;
 
@@ -341,11 +339,6 @@ export const scanQR = () => {
     "https://brg2.github.io/qrscan#" + encodeURIComponent(window.location.href);
 };
 
-// selectSelfAddress - Show a prompt that will allow the user to copy the wallet address
-export const selectSelfAddress = (elId) => {
-  if (index.data.selfaddress) prompt("", index.data.selfaddress);
-};
-
 // useBalance - Use the full wallet balance in the amount input
 export const useBalance = () => {
   if (balance && !isNaN(balance)) $("#amount").val(balance);
@@ -425,9 +418,3 @@ export const pauseConnection = (s) => {
     if (pingTimeout) pingTimeout = clearTimeout(pingTimeout);
   }
 };
-
-// syncBlackTheme - Sets the dark or light theme class
-function syncBlackTheme() {
-  if (blackTheme) $(document.body).addClass("dark");
-  else $(document.body).removeClass("dark");
-}

@@ -51,6 +51,8 @@ export const index = (p, s) => {
       ? ` (${s.selfaddress.slice(0, 4)}...${s.selfaddress.slice(-4)})`
       : "");
 
+  $(document.body)[`${s.blackTheme ? "add" : "remove"}Class`]("dark");
+
   return [
     div.spacer(),
     div[s.retrying ? "blur" : ""]["position-relative"](
@@ -204,7 +206,9 @@ export const index = (p, s) => {
               ? [
                   div({
                     id: "qrcode",
-                    onclick: () => app.selectSelfAddress("selfaddress"),
+                    onclick() {
+                      prompt(s.walletName, s.selfaddress);
+                    },
                     innerHTML: s.qrcode,
                   }),
                   s.subaddrs && s.subaddrs.length > 1
@@ -217,7 +221,8 @@ export const index = (p, s) => {
                               curName = app.lastResponse.name,
                               nameTitle = [];
                             if (curName) nameTitle.push(curName);
-                            if (ix != 0 && a[1]) nameTitle.push(a[1]);
+                            if (ix != 0)
+                              nameTitle.push(`#${ix}${a[1] ? ` ${a[1]}` : ""}`);
                             s.walletName = nameTitle.join(" / ");
                             s.selfaddress = a[0];
                             s.qrcode = new QRCode({
@@ -233,10 +238,9 @@ export const index = (p, s) => {
                             {
                               value: a[0],
                             },
-                            `${a[1] ? `${a[1]}: ` : ""}${a[0].slice(
-                              0,
-                              4
-                            )}...${a[0].slice(-4)}`
+                            `${ix > 0 ? `#${ix} ` : ""}${
+                              a[1] ? `${a[1]}: ` : ""
+                            }${a[0].slice(0, 4)}...${a[0].slice(-4)}`
                           )
                         )
                       )
