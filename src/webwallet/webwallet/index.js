@@ -29,7 +29,7 @@
 import * as app from "./app.js";
 
 // Namespace some element types
-const { button, div, i, img, input, small, span, strong } = H;
+const { button, div, i, img, input, option, select, span } = H;
 
 export const TxDirection = {
   In: 0,
@@ -45,9 +45,15 @@ export const index = (p, s) => {
     }
   });
 
+  document.title =
+    s.walletName +
+    (s.selfaddress
+      ? ` (${s.selfaddress.slice(0, 4)}...${s.selfaddress.slice(-4)})`
+      : "");
+
   return [
     div.spacer(),
-    div[s.retrying ? "blur" : ""](
+    div[s.retrying ? "blur" : ""]["position-relative"](
       { id: "index" },
       s.connected || app.isRecover || s.retrying
         ? [
@@ -183,22 +189,59 @@ export const index = (p, s) => {
               ),
             ]),
             s.show == "TxHistory"
-              ? div(
+              ? div["d-flex"]["justify-content-center"](
                   {
                     style: {
                       height: "320px",
                       width: "100%",
-                      overflow: "auto",
+                      overflowY: "auto",
+                      overflowX: "hidden",
                     },
                   },
                   H(ListTxHistory)
                 )
               : s.show == "SelfQR"
-              ? div({
-                  id: "qrcode",
-                  onclick: () => app.selectSelfAddress("selfaddress"),
-                  innerHTML: app.qrcode,
-                })
+              ? [
+                  div({
+                    id: "qrcode",
+                    onclick: () => app.selectSelfAddress("selfaddress"),
+                    innerHTML: s.qrcode,
+                  }),
+                  s.subaddrs && s.subaddrs.length > 1
+                    ? select["position-absolute"]["form-select"]["mt-1"](
+                        {
+                          id: "addressSelector",
+                          onchange() {
+                            const ix = this.selectedIndex,
+                              a = app.lastResponse.subaddrs[ix],
+                              curName = app.lastResponse.name,
+                              nameTitle = [];
+                            if (curName) nameTitle.push(curName);
+                            if (ix != 0 && a[1]) nameTitle.push(a[1]);
+                            s.walletName = nameTitle.join(" / ");
+                            s.selfaddress = a[0];
+                            s.qrcode = new QRCode({
+                              content: a[0],
+                              width: 320,
+                              height: 320,
+                              padding: 3,
+                            }).svg();
+                          },
+                        },
+                        s.subaddrs.map((a, ix) =>
+                          option(
+                            {
+                              value: a[0],
+                            },
+                            `${a[1] ? `${a[1]}: ` : ""}${a[0].slice(
+                              0,
+                              4
+                            )}...${a[0].slice(-4)}`
+                          )
+                        )
+                      )
+                    : null,
+                ]
               : div({ style: { height: "320px" } }),
           ]
         : [
@@ -265,7 +308,7 @@ export const ListTxHistory = (p, s) => {
         type: app.RequestTypes.ListTxHistory,
       },
       (txs) => {
-        s.txList = txs;
+        s.txList = txs || [];
         s.sync = false;
       }
     );
@@ -313,7 +356,7 @@ export const ListTxHistory = (p, s) => {
                     s.hoverIx = -1;
                   },
                 },
-                div["col"](
+                div["col"]["text-nowrap"](
                   {
                     role: "button",
                     onclick() {

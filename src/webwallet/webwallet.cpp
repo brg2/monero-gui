@@ -49,6 +49,8 @@
 #include "Wallet.h"
 #include "TransactionHistory.h"
 #include "TransactionInfo.h"
+#include "SubaddressModel.h"
+#include "Subaddress.h"
 
 #include "webwallet.h"
 #include "webwallet_fileserver.cpp"
@@ -69,6 +71,7 @@ QObject *WebWallet::webwalletMenu;
 HttpServer WebWallet::server;
 thread WebWallet::server_thread;
 Wallet *WebWallet::currentWallet;
+SubaddressModel *subaddrModel;
 
 QAESEncryption WebWallet::encryption(QAESEncryption::AES_256, QAESEncryption::CBC, QAESEncryption::Padding::PKCS7);
 
@@ -410,6 +413,28 @@ Q_INVOKABLE void WebWallet::start()
                 outJSON.put("bt", blackTheme ? 1 : 0);
                 outJSON.put("name", wName.toStdString());
 
+                // Get subaddresses
+                int sam_rc = subaddrModel->rowCount();
+                pt::ptree samList;
+                for (int i = 0; i < sam_rc; i++) {
+                    QModelIndex index = subaddrModel->index(i,0);
+                    
+                    QString address = subaddrModel->data(index, subaddrModel->SubaddressRowRole::SubaddressAddressRole).toString();
+                    QString label = subaddrModel->data(index, subaddrModel->SubaddressRowRole::SubaddressLabelRole).toString();
+                    
+                    pt::ptree sub_addr;
+                    pt::ptree sub_lbl;
+                    sub_addr.put("", address.toStdString());
+                    sub_lbl.put("", label.toStdString());
+
+                    pt::ptree samNode;
+                    samNode.push_back(std::make_pair("", sub_addr));
+                    samNode.push_back(std::make_pair("", sub_lbl));
+
+                    samList.push_back(std::make_pair("", samNode));
+                }
+                outJSON.add_child("subaddrs", samList);
+
                 std::stringstream ss;
 
                 pt::write_json(ss, outJSON, false);
@@ -722,9 +747,11 @@ Q_INVOKABLE void WebWallet::refresh()
 // run - Syncs the shared variables between the webwallet engine and the QML frontend and returns the app URL
 Q_INVOKABLE QString WebWallet::run(Wallet *useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName, QObject *wwMenu)
 {
-    if (useWallet != NULL)
+    if (useWallet != currentWallet)
     {
         currentWallet = useWallet;
+        subaddrModel = currentWallet->subaddressModel();
+        currentWallet->subaddress()->refresh(currentWallet->currentSubaddressAccount());
     }
     // qCritical() << "Web wallet running";
     webwalletMenu = wwMenu;

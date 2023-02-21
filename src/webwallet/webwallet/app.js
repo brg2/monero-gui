@@ -36,7 +36,6 @@ export const formatter = new Intl.NumberFormat("en-US", {
 const fullHash = window.location.hash.split("#")[1];
 
 export let isRecover = fullHash.slice(0, 1) == "?",
-  qrcode = "",
   reqPassword,
   pcLength = 6,
   walletName = "",
@@ -44,7 +43,8 @@ export let isRecover = fullHash.slice(0, 1) == "?",
   RequestTypes = {
     CreateTransaction: 0,
     ListTxHistory: 1,
-  };
+  },
+  lastResponse = {};
 
 let encrypted = fullHash.substring(1),
   context = isRecover
@@ -66,11 +66,11 @@ let encrypted = fullHash.substring(1),
   _jk,
   pingTimeout,
   connected = false,
-  selfaddress = "",
   blackTheme = isRecover ? null : fullHash.slice(0, 1) == "1",
   balance,
   retrying = false,
-  paused = false;
+  paused = false,
+  acctaddr = "";
 
 export let address = isRecover && context.address ? context.address : "";
 
@@ -181,37 +181,37 @@ export function postAPI(request, cb = null) {
         if (balance != undefined) {
           // Update tx history if already fetched
           if (ListTxHistory.data?.txList) ListTxHistory.data.sync = true;
-          toasts.add({
-            msg: "A new transaction has been processed",
-            type: toasts.ToastTypes.Success,
-          });
+          if (acctaddr == jsonResponse.self) {
+            toasts.add({
+              msg: "A new transaction has been processed",
+              type: toasts.ToastTypes.Success,
+            });
+          }
         }
         balance = newbalance;
         index.data.balance = balance;
       }
 
       // Show qr code of self address
-      if (
-        (jsonResponse.self && selfaddress != jsonResponse.self) ||
-        !connected
-      ) {
-        selfaddress = jsonResponse.self;
-        qrcode = new QRCode({
-          content: selfaddress,
+      if ((jsonResponse.self && acctaddr != jsonResponse.self) || !connected) {
+        index.data.selfaddress = acctaddr = jsonResponse.self;
+        index.data.qrcode = new QRCode({
+          content: index.data.selfaddress,
           width: 320,
           height: 320,
           padding: 3,
         }).svg();
         if (jsonResponse.name) {
-          walletName = jsonResponse.name;
-          document.title =
-            walletName +
-            " (" +
-            selfaddress.slice(0, 4) +
-            "..." +
-            selfaddress.slice(-4) +
-            ")";
+          index.data.walletName = jsonResponse.name;
         }
+      }
+
+      if (
+        jsonResponse.subaddrs &&
+        JSON.stringify(jsonResponse.subaddrs) !=
+          JSON.stringify(lastResponse.subaddrs)
+      ) {
+        index.data.subaddrs = jsonResponse.subaddrs;
       }
 
       syncBlackTheme();
@@ -243,9 +243,11 @@ export function postAPI(request, cb = null) {
       if (!paused) pingTimeout = setTimeout(postAPI, 3000);
 
       // Finally, use custom callback if supplied
-      if (jsonResponse.response && cb != null) {
-        cb(jsonResponse.response);
+      if (cb) {
+        cb(jsonResponse.response || "");
       }
+
+      lastResponse = jsonResponse;
     },
     error: errHandler,
     complete() {
@@ -341,7 +343,7 @@ export const scanQR = () => {
 
 // selectSelfAddress - Show a prompt that will allow the user to copy the wallet address
 export const selectSelfAddress = (elId) => {
-  if (selfaddress) prompt("", selfaddress);
+  if (index.data.selfaddress) prompt("", index.data.selfaddress);
 };
 
 // useBalance - Use the full wallet balance in the amount input

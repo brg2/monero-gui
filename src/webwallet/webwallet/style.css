@@ -261,7 +261,11 @@ body.dark .input-group-text {
 }
 
 .xmr-amount {
-  max-width: 110px;
+  max-width: 85px;
+}
+
+#addressSelector {
+  bottom: -45px;
 }
 
 /* Firefox */
@@ -272,8 +276,7 @@ body.dark .input-group-text {
 
 /* Chrome, Edge, and Safari */
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 16px;
 }
 
 *::-webkit-scrollbar-track {
@@ -283,4 +286,6 @@ body.dark .input-group-text {
 *::-webkit-scrollbar-thumb {
   background-color: #808080;
   border-radius: 10px;
+  background-clip: padding-box;
+  border: 4px solid rgba(0, 0, 0, 0);
 }
