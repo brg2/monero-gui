@@ -53,14 +53,16 @@ export const index = (p, s) => {
         : "");
   }
 
-  s.blackTheme = app.fullHash.slice(0, 1) == "1";
+  if (!s.paired && !app.isRecover) {
+    s.blackTheme = app.fullHash.slice(0, 1) == "1";
+  }
   $(document.body)[`${s.blackTheme ? "add" : "remove"}Class`]("dark");
 
   return [
     div.spacer(),
-    div[s.retrying ? "blur" : ""]["position-relative"](
+    div[!s.connected && s.paired ? "blur" : ""]["position-relative"](
       { id: "index" },
-      s.connected || app.isRecover || s.retrying
+      s.connected || app.isRecover || (!s.connected && s.paired)
         ? [
             // Wallet
             div["w-100"]["d-flex"]["flex-row"]["justify-content-between"][
@@ -81,6 +83,7 @@ export const index = (p, s) => {
               div.spacer(),
               div.closeApp(
                 {
+                  title: "Close web wallet",
                   onclick: app.closeApp,
                 },
                 "×"
@@ -168,7 +171,7 @@ export const index = (p, s) => {
               ](
                 {
                   id: "toggleSelfQRButton",
-                  title: "Show/hide self address",
+                  title: `${s.show == "SelfQR" ? "Hide" : "Show"} self address`,
                   onclick: () => (s.show = s.show == "SelfQR" ? "" : "SelfQR"),
                 },
                 i.bi["bi-qr-code"]()
@@ -186,16 +189,18 @@ export const index = (p, s) => {
               ](
                 {
                   id: "listTxHistory",
-                  title: "List transaction history",
+                  title: `${
+                    s.show == "TxHistory" ? "Hide" : "Show"
+                  } transaction history`,
                   onclick: () =>
                     (s.show = s.show == "TxHistory" ? "" : "TxHistory"),
                 },
                 i.bi["bi-list-ul"]()
               ),
-              button.btn[s.retrying ? "btn-danger" : "btn-primary-xmr"](
+              button.btn["btn-primary-xmr"](
                 {
                   id: "sendButton",
-                  title: "Send XMR" + (s.retrying ? " (Connecting...)" : ""),
+                  title: "Send XMR",
                   onclick: app.createTransaction,
                 },
                 "Send"
@@ -259,6 +264,8 @@ export const index = (p, s) => {
                 ]
               : div({ style: { height: "320px" } }),
           ]
+        : s.paired
+        ? null
         : [
             // Pairing
             div({ id: "pairingTitle" }, "Enter pairing code"),
@@ -303,7 +310,7 @@ export const index = (p, s) => {
           ]
     ),
     div.spacer(),
-    s.retrying
+    !s.connected && s.paired
       ? div(
           {
             id: "disconnected",

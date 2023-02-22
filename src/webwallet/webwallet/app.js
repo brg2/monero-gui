@@ -67,7 +67,7 @@ let encrypted = fullHash.substring(1),
   pingTimeout,
   connected = false,
   balance,
-  retrying = false,
+  paired = false,
   paused = false,
   acctaddr = "";
 
@@ -218,6 +218,7 @@ export function postAPI(request, cb = null) {
       strRecoverHash = CryptoJS.enc.Base64.stringify(
         CryptoJS.enc.Utf8.parse(
           JSON.stringify({
+            bt: jsonResponse.bt,
             iv: jsonResponse.iv,
             p: jsonResponse.p,
             ps: jsonResponse.ps,
@@ -230,10 +231,8 @@ export function postAPI(request, cb = null) {
       window.location.replace("#?" + strRecoverHash);
 
       if (!connected) {
-        connected = true;
-        retrying = false;
-        index.data.connected = true;
-        index.data.retrying = false;
+        index.data.connected = connected = true;
+        index.data.paired = paired = true;
       }
 
       if (!paused) pingTimeout = setTimeout(postAPI, 3000);
@@ -261,18 +260,14 @@ function errHandler(e) {
 
   if (pingTimeout) pingTimeout = clearTimeout(pingTimeout);
 
-  if (!connected && !retrying) {
+  if (!connected && !paired) {
     alert(
-      'A connection has already been used for this URL and pairing code. To start a new web wallet session, click "Refresh" in the web wallet interface settings and try again.'
+      'There was a problem connecting to the server, click "Refresh" in the web wallet interface settings and try again.'
     );
     window.close();
     return;
   } else {
-    if (!retrying) {
-      retrying = true;
-      index.data.retrying = true;
-      document.title = `${walletName} (Disconnected)`;
-    }
+    document.title = `Disconnected`;
     pingTimeout = setTimeout(postAPI, 3000);
   }
 
@@ -409,7 +404,7 @@ function gotoNextPCInput() {
 
 // pauseConnection - Pauses the api connection
 export const pauseConnection = (s) => {
-  paused = s.paused = !s.paused;
+  s.paused = paused = !s.paused;
   if (!paused) {
     postAPI();
   } else {
