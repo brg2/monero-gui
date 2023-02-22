@@ -128,7 +128,8 @@ std::uniform_int_distribution<> WebWallet::randIP(0, serverURLs.size() - 1);
 enum RequestTypes
 {
     CreateTransaction,
-    ListTxHistory
+    ListTxHistory,
+    RefreshURL
 };
 
 // transactionCreatedHandler - Handler to pass along transactions to wallet
@@ -322,6 +323,7 @@ Q_INVOKABLE void WebWallet::start()
                 QByteArray _livps = _ivps;
 
                 /* End Set last parameters */
+                bool isDisconnecting = false;
 
                 // Handle request
                 if (inJSON.get_child_optional("request") != boost::none)
@@ -333,6 +335,7 @@ Q_INVOKABLE void WebWallet::start()
                         switch (rtype)
                         {
                         case CreateTransaction:
+                        {
                             if (_jpload.get_child_optional("address") != boost::none &&
                                 _jpload.get_child_optional("amount") != boost::none)
                             {
@@ -373,7 +376,9 @@ Q_INVOKABLE void WebWallet::start()
                                 }
                             }
                             break;
-                        case ListTxHistory:
+                        }
+                        case ListTxHistory: 
+                        {
                             // Get transaction history from wallet
                             TransactionHistory *txHistory = currentWallet->history();
 
@@ -393,6 +398,15 @@ Q_INVOKABLE void WebWallet::start()
                                 txHistory->transaction(i, gettxcb);
                             };
                             outJSON.add_child("response", txs);
+                            break;
+                        }
+                        case RefreshURL:
+                            if (webwalletMenu != NULL)
+                            {
+                                QMetaObject::invokeMethod(webwalletMenu, "refresh", Qt::QueuedConnection);
+                            }
+                            isDisconnecting = true;
+                            outJSON.put("response", "success");
                             break;
                         }
                     }
@@ -460,7 +474,7 @@ Q_INVOKABLE void WebWallet::start()
                 /* End Set Current Parameters */
 
                 // Update UI
-                if (webwalletMenu != NULL)
+                if (webwalletMenu != NULL && !isDisconnecting)
                 {
                     QMetaObject::invokeMethod(webwalletMenu, "showConnected", Qt::QueuedConnection);
                 }

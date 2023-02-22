@@ -341,6 +341,15 @@ Rectangle {
             Timer {
                 id: webwalletMenuTimer
             }
+            
+            function refresh() {
+                // Focus onto address (if ports are still focused)
+                webwalletAddress.forceActiveFocus();
+                // Regenerate keys
+                webwallet.refresh()
+                // Redraw web wallet QML
+                webwalletMenu.a = !webwalletMenu.a
+            }
 
             function showConnected() {
                 webwalletMenu.connected = true
@@ -443,27 +452,18 @@ Rectangle {
                         tooltip: qsTr("Regenerate URL and pairing code") + translationManager.emptyString
 
                         onClicked: {
-                            function refresh() {
-                                // Focus onto address (if ports are still focused)
-                                webwalletAddress.forceActiveFocus();
-                                // Regenerate keys
-                                webwallet.refresh()
-                                // Redraw web wallet QML
-                                webwalletMenu.a = !webwalletMenu.a
-                            }
-
                             if(webwalletMenu.connected) {
                                 // Show confirmation dialog
                                 confirmationDialog.title = qsTr("Web wallet is connected") + translationManager.emptyString;
                                 confirmationDialog.text  = qsTr("Are you sure you want to stop the current web wallet connection?") + translationManager.emptyString;
                                 confirmationDialog.icon = StandardIcon.Question;
                                 confirmationDialog.onAcceptedCallback = function() {
-                                    refresh()
+                                    webwalletMenu.refresh()
                                 }
                                 confirmationDialog.open()
                                 return
                             } else {
-                                refresh()
+                                webwalletMenu.refresh()
                             }
                         }
                     }

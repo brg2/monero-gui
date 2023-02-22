@@ -29,7 +29,7 @@
 import * as app from "./app.js";
 
 // Namespace some element types
-const { button, div, i, img, input, option, select, span } = H;
+const { a, button, div, i, img, input, option, select, span } = H;
 
 export const TxDirection = {
   In: 0,
@@ -45,12 +45,15 @@ export const index = (p, s) => {
     }
   });
 
-  document.title =
-    s.walletName +
-    (s.selfaddress
-      ? ` (${s.selfaddress.slice(0, 4)}...${s.selfaddress.slice(-4)})`
-      : "");
+  if (s.walletName && s.selfaddress) {
+    document.title =
+      s.walletName +
+      (s.selfaddress
+        ? ` (${s.selfaddress.slice(0, 4)}...${s.selfaddress.slice(-4)})`
+        : "");
+  }
 
+  s.blackTheme = app.fullHash.slice(0, 1) == "1";
   $(document.body)[`${s.blackTheme ? "add" : "remove"}Class`]("dark");
 
   return [
@@ -64,6 +67,8 @@ export const index = (p, s) => {
               "align-items-center"
             ](
               { id: "title" },
+              // Used to center the Monero logo
+              div.closeApp({ style: { visibility: "hidden" } }, "×"),
               div.spacer(),
               div["d-flex"]["flex-row"]["align-items-center"](
                 {},
@@ -73,7 +78,13 @@ export const index = (p, s) => {
                 }),
                 div({ id: "moneroTitle" }, "Monero")
               ),
-              div.spacer()
+              div.spacer(),
+              div.closeApp(
+                {
+                  onclick: app.closeApp,
+                },
+                "×"
+              )
             ),
             div["mb-2"]["input-group"]({}, [
               input["form-control"]["form-control-lg"]({

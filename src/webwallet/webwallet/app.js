@@ -29,11 +29,10 @@
 import { index, ListTxHistory, toasts } from "./index.js";
 
 export const formatter = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 12,
-});
-
-const fullHash = window.location.hash.split("#")[1];
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 12,
+  }),
+  fullHash = window.location.hash.split("#")[1];
 
 export let isRecover = fullHash.slice(0, 1) == "?",
   reqPassword,
@@ -43,6 +42,7 @@ export let isRecover = fullHash.slice(0, 1) == "?",
   RequestTypes = {
     CreateTransaction: 0,
     ListTxHistory: 1,
+    RefreshURL: 2,
   },
   lastResponse = {};
 
@@ -66,7 +66,6 @@ let encrypted = fullHash.substring(1),
   _jk,
   pingTimeout,
   connected = false,
-  // blackTheme = ,
   balance,
   retrying = false,
   paused = false,
@@ -76,7 +75,6 @@ export let address = isRecover && context.address ? context.address : "";
 
 // app - Initialize the app
 export const app = () => {
-  index.data.blackTheme = fullHash.slice(0, 1) == "1";
   if (!isRecover) return clearPairingCode();
   _ps = context.ps;
   _k = CryptoJS.enc.Hex.parse(context.k);
@@ -417,4 +415,25 @@ export const pauseConnection = (s) => {
   } else {
     if (pingTimeout) pingTimeout = clearTimeout(pingTimeout);
   }
+};
+
+export const closeApp = () => {
+  if (
+    !confirm(
+      "This will stop the current wallet connection and regenerate a new app URL.\n\nAre you sure you want to continue?"
+    )
+  )
+    return;
+  postAPI(
+    {
+      type: RequestTypes.RefreshURL,
+    },
+    (resp) => {
+      if (resp == "success") {
+        window.close();
+      } else {
+        alert("There was a problem closing the connection. Please try again");
+      }
+    }
+  );
 };
