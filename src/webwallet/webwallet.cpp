@@ -761,7 +761,7 @@ Q_INVOKABLE void WebWallet::refresh()
 // run - Syncs the shared variables between the webwallet engine and the QML frontend and returns the app URL
 Q_INVOKABLE QString WebWallet::run(Wallet *useWallet, bool passwordRequired, QString walletPassword, bool isBlackTheme, QString walletName, QObject *wwMenu)
 {
-    if (useWallet != currentWallet)
+    if (useWallet != NULL && useWallet != currentWallet)
     {
         currentWallet = useWallet;
         subaddrModel = currentWallet->subaddressModel();
