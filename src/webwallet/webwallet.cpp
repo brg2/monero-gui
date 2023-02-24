@@ -721,7 +721,7 @@ Q_INVOKABLE void WebWallet::refresh()
     QByteArray _ivps = QCryptographicHash::hash((_iv.toHex() + _ps).toUtf8(), QCryptographicHash::Md5);
 
     outJSON.put("k", _k.toHex().toStdString());
-    QByteArray encodeText = encryption.encode(_ps.toLocal8Bit(), _k, _ivps);
+    QByteArray encodeText = encryption.encode(_ps.toUtf8(), _k, _ivps);
 
     std::stringstream ss;
 
@@ -781,7 +781,7 @@ Q_INVOKABLE QString WebWallet::run(Wallet *useWallet, bool passwordRequired, QSt
     }
 
     QByteArray _ivps = QCryptographicHash::hash((_iv.toHex() + _ps).toUtf8(), QCryptographicHash::Md5);
-    QByteArray encodeText = encryption.encode(_ps.toLocal8Bit(), _k, _ivps);
+    QByteArray encodeText = encryption.encode(_ps.toUtf8(), _k, _ivps);
     return _p + "/#" + (isBlackTheme ? "1" : "0") + QString(encodeText.toBase64());
 }
 
