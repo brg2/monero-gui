@@ -739,6 +739,8 @@ Q_INVOKABLE void WebWallet::refresh()
     {
         // Reset key change flag
         webwalletMenu->setProperty("keysChanged", false);
+        // Redraw qml screen
+        webwalletMenu->setProperty("a", !webwalletMenu->property("a").toBool());
     }
 
     // Debugging information
