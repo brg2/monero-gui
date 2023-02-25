@@ -392,7 +392,15 @@ Q_INVOKABLE void WebWallet::start()
                                     tx.put("unixtime", a.timestamp().toMSecsSinceEpoch());
                                     tx.put("amount", a.displayAmount().toStdString());
                                     tx.put("id", a.hash().toStdString());
-                                    tx.put("dir", a.direction());
+
+                                    // Address info
+                                    bool isOut = a.direction() == TransactionInfo::Direction::Direction_Out;
+                                    if(isOut) {
+                                        tx.put("out", a.destinations_formatted().toStdString());
+                                    } else {
+                                        tx.put("in", std::to_string(a.subaddrIndex().values().first()));
+                                    }
+
                                     txs.push_back(std::make_pair("", tx));
                                 };
                                 txHistory->transaction(i, gettxcb);

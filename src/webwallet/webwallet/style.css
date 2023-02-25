@@ -144,6 +144,10 @@ body.dark .form-control::placeholder {
   border-radius: 0.5rem;
 }
 
+body:not(.dark) #qrcode > svg {
+  border: 1px solid #ced4da;
+}
+
 .blur {
   filter: blur(250px) opacity(0);
   pointer-events: none;
@@ -262,10 +266,6 @@ body.dark .input-group-text {
 
 .xmr-amount {
   max-width: 85px;
-}
-
-#addressSelector {
-  bottom: -45px;
 }
 
 .closeApp {

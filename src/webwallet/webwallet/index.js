@@ -31,11 +31,6 @@ import * as app from "./app.js";
 // Namespace some element types
 const { a, button, div, i, img, input, option, select, span } = H;
 
-export const TxDirection = {
-  In: 0,
-  Out: 1,
-};
-
 // index - The root of WebWallet
 export const index = (p, s) => {
   setTimeout(() => {
@@ -167,8 +162,8 @@ export const index = (p, s) => {
                 "Reset"
               ),
               button.btn["btn-secondary"][
-                s.show == "SelfQR" ? "btn-light" : ""
-              ](
+                !s.blackTheme && s.show == "SelfQR" ? "border" : ""
+              ][s.show == "SelfQR" ? "btn-light" : ""](
                 {
                   id: "toggleSelfQRButton",
                   title: `${s.show == "SelfQR" ? "Hide" : "Show"} self address`,
@@ -176,7 +171,9 @@ export const index = (p, s) => {
                 },
                 i.bi["bi-qr-code"]()
               ),
-              button.btn["btn-secondary"][s.paused ? "btn-light" : ""](
+              button.btn["btn-secondary"][
+                !s.blackTheme && s.paused ? "border" : ""
+              ][s.paused ? "btn-light" : ""](
                 {
                   id: "togglePauseResume",
                   title: (s.paused ? "Resume" : "Pause") + " connection",
@@ -185,8 +182,8 @@ export const index = (p, s) => {
                 s.paused ? i.bi["bi-play-fill"]() : i.bi["bi-pause-fill"]()
               ),
               button.btn["btn-secondary"][
-                s.show == "TxHistory" ? "btn-light" : ""
-              ](
+                !s.blackTheme && s.show == "TxHistory" ? "border" : ""
+              ][s.show == "TxHistory" ? "btn-light" : ""](
                 {
                   id: "listTxHistory",
                   title: `${
@@ -207,17 +204,43 @@ export const index = (p, s) => {
               ),
             ]),
             s.show == "TxHistory"
-              ? div["d-flex"]["justify-content-center"](
-                  {
-                    style: {
-                      height: "320px",
-                      width: "100%",
-                      overflowY: "auto",
-                      overflowX: "hidden",
+              ? [
+                  div["d-flex"]["justify-content-center"](
+                    {
+                      style: {
+                        height: "320px",
+                        width: "100%",
+                        overflowY: "auto",
+                        overflowX: "hidden",
+                      },
                     },
-                  },
-                  H(ListTxHistory)
-                )
+                    H(ListTxHistory)
+                  ),
+                  s.subaddrs && s.subaddrs.length > 1
+                    ? select["form-select"]["mt-1"][
+                        s.blackTheme ? "bg-dark" : ""
+                      ][s.blackTheme ? "text-light" : ""](
+                        {
+                          id: "addressSelector",
+                          onchange() {
+                            ListTxHistory.data.filter =
+                              this.selectedIndex > 0 ? this.value : "";
+                          },
+                        },
+                        option({}, "Filter by..."),
+                        s.subaddrs.map((a, ix) =>
+                          option(
+                            {
+                              value: ix,
+                            },
+                            `${ix > 0 ? `#${ix} ` : ""}${
+                              a[1] ? `${a[1]}: ` : ""
+                            }${a[0].slice(0, 4)}...${a[0].slice(-4)}`
+                          )
+                        )
+                      )
+                    : null,
+                ]
               : s.show == "SelfQR"
               ? [
                   div({
@@ -228,7 +251,9 @@ export const index = (p, s) => {
                     innerHTML: s.qrcode,
                   }),
                   s.subaddrs && s.subaddrs.length > 1
-                    ? select["position-absolute"]["form-select"]["mt-1"](
+                    ? select["form-select"]["mt-1"][
+                        s.blackTheme ? "bg-dark" : ""
+                      ][s.blackTheme ? "text-light" : ""](
                         {
                           id: "addressSelector",
                           onchange() {
@@ -262,7 +287,7 @@ export const index = (p, s) => {
                       )
                     : null,
                 ]
-              : div({ style: { height: "320px" } }),
+              : null,
           ]
         : s.paired
         ? null
@@ -334,73 +359,81 @@ export const ListTxHistory = (p, s) => {
         s.sync = false;
       }
     );
-  return !s.txList
+  const txList = !s.txList
+    ? []
+    : s.txList
+        .slice()
+        .filter((t) =>
+          s.filter
+            ? t.in?.includes(s.filter) === true ||
+              t.out?.includes(s.filter) === true
+            : true
+        )
+        .sort((a, b) => {
+          return parseInt(a.unixtime) - parseInt(b.unixtime);
+        })
+        .reverse();
+  return !txList
     ? "Loading..."
-    : !s.txList.length
+    : !txList.length
     ? "No transactions"
     : div["container-fluid"](
         {},
-        s.txList
-          .slice()
-          .sort((a, b) => {
-            return parseInt(a.unixtime) - parseInt(b.unixtime);
-          })
-          .reverse()
-          .map((t, ix) => {
-            const ut = parseInt(t.unixtime),
-              d = moment(ut),
-              amt = app.formatter.format(t.amount),
-              isSend = t.dir == TxDirection.Out,
-              age = moment().valueOf() - ut,
-              tto = 150000 - age; // Time to old (2.5 minutes)
+        txList.map((t, ix) => {
+          const ut = parseInt(t.unixtime),
+            d = moment(ut),
+            amt = app.formatter.format(t.amount),
+            isSend = "out" in t,
+            age = moment().valueOf() - ut,
+            tto = 150000 - age; // Time to old (2.5 minutes)
 
-            s.isNew = tto > 0;
+          s.isNew = tto > 0;
 
-            if (s.isNew) {
-              setTimeout(() => {
-                s.isNew = false;
-              }, tto);
-            }
-            return [
-              div.row["flex-nowrap"]["mb-1"]["p-1"]["rounded"][
-                s.isNew ? "bg-success" : s.hoverIx == ix ? "bg-secondary" : ""
-              ](
+          if (s.isNew) {
+            setTimeout(() => {
+              s.isNew = false;
+            }, tto);
+          }
+          return [
+            div.row["flex-nowrap"]["mb-1"]["p-1"]["rounded"][
+              s.isNew ? "bg-success" : s.hoverIx == ix ? "bg-secondary" : ""
+            ](
+              {
+                title: `${t.id} - ${
+                  isSend ? "Sent" : "Received"
+                } ${amt} XMR on ${d.format("MM/DD/YY")} at ${d.format(
+                  "h:mma"
+                )}`,
+                onmouseover() {
+                  s.hoverIx = ix;
+                },
+                onmouseout() {
+                  s.hoverIx = -1;
+                },
+              },
+              div["col"]["text-nowrap"](
                 {
-                  title: `${t.id} - ${
-                    isSend ? "Sent" : "Received"
-                  } ${amt} XMR on ${d.format("MM/DD/YY")} at ${d.format(
-                    "h:mma"
-                  )}`,
-                  onmouseover() {
-                    s.hoverIx = ix;
-                  },
-                  onmouseout() {
-                    s.hoverIx = -1;
+                  role: "button",
+                  onclick() {
+                    s.detailIx = s.detailIx == ix ? -1 : ix;
                   },
                 },
-                div["col"]["text-nowrap"](
-                  {
-                    role: "button",
-                    onclick() {
-                      s.detailIx = s.detailIx == ix ? -1 : ix;
-                    },
-                  },
-                  i.bi[`bi-${isSend ? "upload" : "download"}`]({
-                    title: isSend ? "Sent" : "Received",
-                  }),
-                  ` `,
-                  span["xmr-amount"]["d-inline-block"]["align-bottom"][
-                    "text-truncate"
-                  ]({ title: `${amt} XMR` }, amt),
-                  ` XMR`
-                ),
-                div["col-auto"]["text-end"]({}, `${d.format("MMM D, YYYY")}`)
+                i.bi[`bi-${isSend ? "upload" : "download"}`]({
+                  title: isSend ? "Sent" : "Received",
+                }),
+                ` `,
+                span["xmr-amount"]["d-inline-block"]["align-bottom"][
+                  "text-truncate"
+                ]({ title: `${amt} XMR` }, amt),
+                ` XMR`
               ),
-              s.detailIx == ix
-                ? div.row({}, div["text-truncate"]({}, `${t.id}`))
-                : null,
-            ];
-          })
+              div["col-auto"]["text-end"]({}, `${d.format("MMM D, YYYY")}`)
+            ),
+            s.detailIx == ix
+              ? div.row({}, div["text-truncate"]({}, `${t.id}`))
+              : null,
+          ];
+        })
       );
 };
 
