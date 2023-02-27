@@ -26,7 +26,7 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import { index, ListTxHistory, toasts } from "./index.js";
+import { index, TxHistory, toasts } from "./index.js";
 
 export const formatter = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
@@ -41,7 +41,7 @@ export let isRecover = fullHash.slice(0, 1) == "?",
   strRecoverHash,
   RequestTypes = {
     CreateTransaction: 0,
-    ListTxHistory: 1,
+    TxHistory: 1,
     RefreshURL: 2,
   },
   lastResponse = {};
@@ -178,7 +178,7 @@ export function postAPI(request, cb = null) {
         // Show new transaction notification if balance not synced already
         if (balance != undefined) {
           // Update tx history if already fetched
-          if (ListTxHistory.data?.txList) ListTxHistory.data.sync = true;
+          if (TxHistory.data?.txList) TxHistory.data.sync = true;
           if (acctaddr == jsonResponse.self) {
             toasts.add({
               msg: "A new transaction has been processed",

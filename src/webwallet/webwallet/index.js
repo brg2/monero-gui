@@ -204,89 +204,9 @@ export const index = (p, s) => {
               ),
             ]),
             s.show == "TxHistory"
-              ? [
-                  div["d-flex"]["justify-content-center"](
-                    {
-                      style: {
-                        height: "320px",
-                        width: "100%",
-                        overflowY: "auto",
-                        overflowX: "hidden",
-                      },
-                    },
-                    H(ListTxHistory)
-                  ),
-                  s.subaddrs && s.subaddrs.length > 1
-                    ? select["form-select"]["mt-1"][
-                        s.blackTheme ? "bg-dark" : ""
-                      ][s.blackTheme ? "text-light" : ""](
-                        {
-                          id: "addressSelector",
-                          onchange() {
-                            ListTxHistory.data.filter =
-                              this.selectedIndex > 0 ? this.value : "";
-                          },
-                        },
-                        option({}, "Filter by..."),
-                        s.subaddrs.map((a, ix) =>
-                          option(
-                            {
-                              value: ix,
-                            },
-                            `${ix > 0 ? `#${ix} ` : ""}${
-                              a[1] ? `${a[1]}: ` : ""
-                            }${a[0].slice(0, 4)}...${a[0].slice(-4)}`
-                          )
-                        )
-                      )
-                    : null,
-                ]
+              ? H(TxHistory)
               : s.show == "SelfQR"
-              ? [
-                  div({
-                    id: "qrcode",
-                    onclick() {
-                      prompt(s.walletName, s.selfaddress);
-                    },
-                    innerHTML: s.qrcode,
-                  }),
-                  s.subaddrs && s.subaddrs.length > 1
-                    ? select["form-select"]["mt-1"][
-                        s.blackTheme ? "bg-dark" : ""
-                      ][s.blackTheme ? "text-light" : ""](
-                        {
-                          id: "addressSelector",
-                          onchange() {
-                            const ix = this.selectedIndex,
-                              a = app.lastResponse.subaddrs[ix],
-                              curName = app.lastResponse.name,
-                              nameTitle = [];
-                            if (curName) nameTitle.push(curName);
-                            if (ix != 0)
-                              nameTitle.push(`#${ix}${a[1] ? ` ${a[1]}` : ""}`);
-                            s.walletName = nameTitle.join(" / ");
-                            s.selfaddress = a[0];
-                            s.qrcode = new QRCode({
-                              content: a[0],
-                              width: 320,
-                              height: 320,
-                              padding: 3,
-                            }).svg();
-                          },
-                        },
-                        s.subaddrs.map((a, ix) =>
-                          option(
-                            {
-                              value: a[0],
-                            },
-                            `${ix > 0 ? `#${ix} ` : ""}${
-                              a[1] ? `${a[1]}: ` : ""
-                            }${a[0].slice(0, 4)}...${a[0].slice(-4)}`
-                          )
-                        )
-                      )
-                    : null,
-                ]
+              ? H(SelfQR)
               : null,
           ]
         : s.paired
@@ -348,11 +268,11 @@ export const index = (p, s) => {
   ];
 };
 
-export const ListTxHistory = (p, s) => {
+export const TxHistory = (p, s) => {
   if (!s.txList || s.sync)
     app.postAPI(
       {
-        type: app.RequestTypes.ListTxHistory,
+        type: app.RequestTypes.TxHistory,
       },
       (txs) => {
         s.txList = txs || [];
@@ -366,75 +286,154 @@ export const ListTxHistory = (p, s) => {
         .filter((t) =>
           s.filter
             ? t.in?.includes(s.filter) === true ||
-              t.out?.includes(s.filter) === true
+              t.out?.includes(index.data.subaddrs[s.filter][0]) === true
             : true
         )
         .sort((a, b) => {
           return parseInt(a.unixtime) - parseInt(b.unixtime);
         })
         .reverse();
-  return !txList
-    ? "Loading..."
-    : !txList.length
-    ? "No transactions"
-    : div["container-fluid"](
-        {},
-        txList.map((t, ix) => {
-          const ut = parseInt(t.unixtime),
-            d = moment(ut),
-            amt = app.formatter.format(t.amount),
-            isSend = "out" in t,
-            age = moment().valueOf() - ut,
-            tto = 150000 - age; // Time to old (2.5 minutes)
+  return [
+    div["d-flex"]["justify-content-center"]["w-100"](
+      {
+        style: {
+          height: "320px",
+          overflowY: "auto",
+          overflowX: "hidden",
+        },
+      },
+      !txList
+        ? "Loading..."
+        : !txList.length
+        ? "No transactions"
+        : div["container-fluid"](
+            {},
+            txList.map((t, ix) => {
+              const ut = parseInt(t.unixtime),
+                d = moment(ut),
+                amt = app.formatter.format(t.amount),
+                isSend = "out" in t,
+                age = moment().valueOf() - ut,
+                tto = 150000 - age; // Time to old (2.5 minutes)
 
-          s.isNew = tto > 0;
+              s.isNew = tto > 0;
 
-          if (s.isNew) {
-            setTimeout(() => {
-              s.isNew = false;
-            }, tto);
-          }
-          return [
-            div.row["flex-nowrap"]["mb-1"]["p-1"]["rounded"][
-              s.isNew ? "bg-success" : s.hoverIx == ix ? "bg-secondary" : ""
-            ](
-              {
-                title: `${t.id} - ${
-                  isSend ? "Sent" : "Received"
-                } ${amt} XMR on ${d.format("MM/DD/YY")} at ${d.format(
-                  "h:mma"
-                )}`,
-                onmouseover() {
-                  s.hoverIx = ix;
-                },
-                onmouseout() {
-                  s.hoverIx = -1;
-                },
-              },
-              div["col"]["text-nowrap"](
-                {
-                  role: "button",
-                  onclick() {
-                    s.detailIx = s.detailIx == ix ? -1 : ix;
+              if (s.isNew) {
+                setTimeout(() => {
+                  s.isNew = false;
+                }, tto);
+              }
+              return [
+                div.row["flex-nowrap"]["mb-1"]["p-1"]["rounded"][
+                  s.isNew ? "bg-success" : s.hoverIx == ix ? "bg-secondary" : ""
+                ][s.hoverIx == ix ? "text-light" : ""](
+                  {
+                    title: `${t.id} - ${
+                      isSend ? "Sent" : "Received"
+                    } ${amt} XMR on ${d.format("MM/DD/YY")} at ${d.format(
+                      "h:mma"
+                    )}`,
+                    onmouseover() {
+                      s.hoverIx = ix;
+                    },
+                    onmouseout() {
+                      s.hoverIx = -1;
+                    },
                   },
-                },
-                i.bi[`bi-${isSend ? "upload" : "download"}`]({
-                  title: isSend ? "Sent" : "Received",
-                }),
-                ` `,
-                span["xmr-amount"]["d-inline-block"]["align-bottom"][
-                  "text-truncate"
-                ]({ title: `${amt} XMR` }, amt),
-                ` XMR`
-              ),
-              div["col-auto"]["text-end"]({}, `${d.format("MMM D, YYYY")}`)
-            ),
-            s.detailIx == ix
-              ? div.row({}, div["text-truncate"]({}, `${t.id}`))
-              : null,
-          ];
-        })
-      );
+                  div["col"]["text-nowrap"](
+                    {
+                      role: "button",
+                      onclick() {
+                        s.detailIx = s.detailIx == ix ? -1 : ix;
+                      },
+                    },
+                    i.bi[`bi-${isSend ? "upload" : "download"}`]({
+                      title: isSend ? "Sent" : "Received",
+                    }),
+                    ` `,
+                    span["xmr-amount"]["d-inline-block"]["align-bottom"][
+                      "text-truncate"
+                    ]({ title: `${amt} XMR` }, amt),
+                    ` XMR`
+                  ),
+                  div["col-auto"]["text-end"]({}, `${d.format("MMM D, YYYY")}`)
+                ),
+                s.detailIx == ix
+                  ? div.row({}, div["text-truncate"]({}, `${t.id}`))
+                  : null,
+              ];
+            })
+          )
+    ),
+    index.data.subaddrs?.length > 1
+      ? select["form-select"]["mt-1"][index.data.blackTheme ? "bg-dark" : ""][
+          index.data.blackTheme ? "text-light" : ""
+        ](
+          {
+            id: "addressSelector",
+            onchange() {
+              s.filter = this.selectedIndex > 0 ? this.value : "";
+            },
+          },
+          option({}, "Filter by..."),
+          H(SubAddressOptions)
+        )
+      : null,
+  ];
+};
+
+export const SelfQR = (p, s) => {
+  return [
+    div({
+      id: "qrcode",
+      onclick() {
+        prompt(index.data.walletName, index.data.selfaddress);
+      },
+      innerHTML: index.data.qrcode,
+    }),
+    index.data.subaddrs && index.data.subaddrs.length > 1
+      ? select["form-select"]["mt-1"][index.data.blackTheme ? "bg-dark" : ""][
+          index.data.blackTheme ? "text-light" : ""
+        ](
+          {
+            id: "addressSelector",
+            onchange() {
+              const ix = this.selectedIndex,
+                a = app.lastResponse.subaddrs[ix],
+                curName = app.lastResponse.name,
+                nameTitle = [];
+              if (curName) nameTitle.push(curName);
+              if (ix != 0) nameTitle.push(`#${ix}${a[1] ? ` ${a[1]}` : ""}`);
+              index.data.walletName = nameTitle.join(" / ");
+              index.data.selfaddress = a[0];
+              index.data.qrcode = new QRCode({
+                content: a[0],
+                width: 320,
+                height: 320,
+                padding: 3,
+              }).svg();
+            },
+          },
+          H(SubAddressOptions)
+        )
+      : null,
+  ];
+};
+
+const SubAddressOptions = () => {
+  return [
+    index.data.subaddrs.map((a, ix) =>
+      option(
+        {
+          value: ix,
+        },
+        `${ix > 0 ? `#${ix} ` : ""}${a[1] ? `${a[1]}: ` : ""}${a[0].slice(
+          0,
+          4
+        )}...${a[0].slice(-4)}`
+      )
+    ),
+  ];
 };
 
 const Toasts = (p, s) => {

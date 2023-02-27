@@ -92,16 +92,17 @@
               _children[__c] !== _pathState[0])
               return
             _r = 1                                                      // First set the rendering bit to 1
-            render(                                                     // We then trigger the same render cycle that will
-              vnodes,                                                   // update the DOM
-              dom,                                                      // vnode index
-              _baseState,                                               // 0 for _unused1
-              dom.childNodes                                            // Current path state to be re-used
+            _c = __c                                                    // Then set the iterator to the stored index
+            nrender(                                                    // We then trigger the same render cycle that will
+              vnode,                                                    // update the DOM
+              index,                                                    // vnode index
+              0,                                                        // 0 for _unused1
+              _pathState                                                // Current path state to be re-used
             )
             _r = 0                                                      // Set rendering bit to 0
           }
         ) {
-          if(vnode === null) return _c--;                               // Return if no vnode
+          if(vnode === null || vnode === undefined) return _c--;                               // Return if no vnode
 
           if(vnode.E && vnode.E.call && !vnode.E.name && !vnode.E._id)  // Adds unique identifier for anonymous functions
             vnode.E._id = ++anonIndex
@@ -110,8 +111,8 @@
               vnode.E.call ?                                            // on index and tag / component name
                 (vnode.E.name || vnode.E._id || '*') : '')) : '')
                 
-          _pathState = _baseState[_path] ||=                            // b. Retrieve path state for this vnode
-            [0, vnode.E ? new Proxy({}, {                                         // c. Update base [cache, nodeState(proxy), childrenState]
+          _pathState = _baseState[_path] ||                             // b. Retrieve path state for this vnode
+            [0, vnode.E ? new Proxy({}, {                               // c. Update base [cache, nodeState(proxy), childrenState]
           
               deleteProperty(target, name) {                            // i. deleteProperty (i.e. delete object[name])
                 timer()                                                 //   Each of the proxy handlers calls the timer
