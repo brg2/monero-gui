@@ -111,7 +111,7 @@
               vnode.E.call ?                                            // on index and tag / component name
                 (vnode.E.name || vnode.E._id || '*') : '')) : '')
                 
-          _pathState = _baseState[_path] ||                             // b. Retrieve path state for this vnode
+          _pathState = _pathState || _baseState[_path] ||                             // b. Retrieve path state for this vnode
             [0, vnode.E ? new Proxy({}, {                               // c. Update base [cache, nodeState(proxy), childrenState]
           
               deleteProperty(target, name) {                            // i. deleteProperty (i.e. delete object[name])
