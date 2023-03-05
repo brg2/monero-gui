@@ -286,7 +286,8 @@ export const TxHistory = (p, s) => {
         .filter((t) =>
           s.filter
             ? t.in?.includes(s.filter) === true ||
-              t.out?.includes(index.data.subaddrs[s.filter][0]) === true
+              t.out?.includes(index.data.subaddrs[s.filter][0]) === true ||
+              t.outFrom?.includes(s.filter) === true
             : true
         )
         .sort((a, b) => {

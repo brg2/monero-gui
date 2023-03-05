@@ -377,7 +377,7 @@ Q_INVOKABLE void WebWallet::start()
                             }
                             break;
                         }
-                        case ListTxHistory: 
+                        case ListTxHistory:
                         {
                             // Get transaction history from wallet
                             TransactionHistory *txHistory = currentWallet->history();
@@ -395,9 +395,13 @@ Q_INVOKABLE void WebWallet::start()
 
                                     // Address info
                                     bool isOut = a.direction() == TransactionInfo::Direction::Direction_Out;
-                                    if(isOut) {
+                                    if (isOut)
+                                    {
                                         tx.put("out", a.destinations_formatted().toStdString());
-                                    } else {
+                                        tx.put("outFrom", std::to_string(a.subaddrIndex().values().first()));
+                                    }
+                                    else
+                                    {
                                         tx.put("in", std::to_string(a.subaddrIndex().values().first()));
                                     }
 
@@ -438,12 +442,13 @@ Q_INVOKABLE void WebWallet::start()
                 // Get subaddresses
                 int sam_rc = subaddrModel->rowCount();
                 pt::ptree samList;
-                for (int i = 0; i < sam_rc; i++) {
-                    QModelIndex index = subaddrModel->index(i,0);
-                    
+                for (int i = 0; i < sam_rc; i++)
+                {
+                    QModelIndex index = subaddrModel->index(i, 0);
+
                     QString address = subaddrModel->data(index, subaddrModel->SubaddressRowRole::SubaddressAddressRole).toString();
                     QString label = subaddrModel->data(index, subaddrModel->SubaddressRowRole::SubaddressLabelRole).toString();
-                    
+
                     pt::ptree sub_addr;
                     pt::ptree sub_lbl;
                     sub_addr.put("", address.toStdString());
