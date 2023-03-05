@@ -95,14 +95,12 @@
             _c = __c                                                    // Then set the iterator to the stored index
             nrender(                                                    // We then trigger the same render cycle that will
               vnode,                                                    // update the DOM
-              index,                                                    // vnode index
-              0,                                                        // 0 for _unused1
-              _pathState                                                // Current path state to be re-used
+              index                                                     // Current path state to be re-used
             )
             _r = 0                                                      // Set rendering bit to 0
           }
         ) {
-          if(vnode === null || vnode === undefined) return _c--;                               // Return if no vnode
+          if(vnode === null || vnode === undefined) return _c--;        // Return if no vnode
 
           if(vnode.E && vnode.E.call && !vnode.E.name && !vnode.E._id)  // Adds unique identifier for anonymous functions
             vnode.E._id = ++anonIndex
@@ -111,7 +109,7 @@
               vnode.E.call ?                                            // on index and tag / component name
                 (vnode.E.name || vnode.E._id || '*') : '')) : '')
                 
-          _pathState = _pathState || _baseState[_path] ||                             // b. Retrieve path state for this vnode
+          _pathState = _baseState[_path] ||=                            // b. Retrieve path state for this vnode
             [0, vnode.E ? new Proxy({}, {                               // c. Update base [cache, nodeState(proxy), childrenState]
           
               deleteProperty(target, name) {                            // i. deleteProperty (i.e. delete object[name])
